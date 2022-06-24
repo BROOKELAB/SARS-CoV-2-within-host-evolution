@@ -14,7 +14,7 @@ This project uses R (v4.1.1) and associated packages in base R.
 
 * tidyverse (v1.3.1)
 * rio (v0.5.27)
-* trackviewer (v1.28.1)
+* trackViewer (v1.28.1)
 * gtools (v3.9.2)
 * here (v1.0.1)
 
