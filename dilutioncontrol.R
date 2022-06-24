@@ -26,8 +26,10 @@ for(i in 1:length(ct26)){
   write.csv(ct26[[i]],ct26.filenames[[i]])
 }
 
-five.palette <- c("#9D6A90","#618BAF","#27A59B","#6EB267","#C8AF46")
+#this .csv is a compilation of all csvs in ct26 labeled by dilution group
 dilution26 <- read.csv("dilution_controls/ct26_dilutions.csv")
+
+five.palette <- c("#9D6A90","#618BAF","#27A59B","#6EB267","#C8AF46")
 colnames(dilution26)[[4]] <- "Spike-In %"
 ggplot(data=dilution26, aes(x=R1,y=R2,col=`Spike-In %`)) +
   geom_point(size=4) +
