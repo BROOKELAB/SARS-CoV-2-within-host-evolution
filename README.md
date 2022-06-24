@@ -4,7 +4,7 @@ Workflow for quantifying within-host evolution and compartmentalization of SARS-
 
 This workflow quantifies the temporal and spatial dynamics of intra-host single nucleotide variants (iSNVs) in longitudinally sampled populations of SARS-CoV-2. 
 
-Scripts produce the figures associated with [Within-host evolutionary dynamics and tissue compartmentalization during acute SARS-CoV-2 infection](https://doi.org/10.1101/2022.06.21.497047), Farjo et al. (2022). 
+Scripts generate the figures associated with [Within-host evolutionary dynamics and tissue compartmentalization during acute SARS-CoV-2 infection](https://doi.org/10.1101/2022.06.21.497047), Farjo et al. (2022). 
 
 # Requirements and setup
 
