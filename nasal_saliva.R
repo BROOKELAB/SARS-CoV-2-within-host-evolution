@@ -235,11 +235,6 @@ for(i in seq_along(saliva.files)){
   }
 }
 
-#!!probably going to need to cut out files that aren't low coverage
-#in one environment but are in another!!
-#do this after the existing cuts i guess
-#and will need to cut from both environments since they still technically
-#exist in both (just as length 0)
 
 #cutting out files that exist in nasal but not saliva
 #and vice versa
@@ -412,10 +407,7 @@ keepcommon <- function(var){
 }
 nasal_intersecting <- lapply(nas_list,keepcommon)
 names(nasal_intersecting) <- names(nas_list)
-#450241 has no intersecting mutations
-#adding null placeholder so it doesn't mess with the rest of the list
-#placeholder <- import("placeholder_SNP.xlsx")
-#nasal_intersecting[[7]] <- placeholder
+
 nasal_intersecting <- lapply(nasal_intersecting,arrange,POS) 
 for(i in seq_along(nasal_intersecting)){
   nasal_intersecting[[i]] <- nasal_intersecting[[i]] %>%
@@ -696,7 +688,6 @@ for(i in seq_along(comp.list)){
 
 
 #match NA values between environments
-#this is annoying but I can't think of a better way
 
 freq1 <- function(comptable){
   for(i in seq_along(comptable$POS)){
