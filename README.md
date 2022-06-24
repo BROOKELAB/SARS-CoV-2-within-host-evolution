@@ -123,8 +123,8 @@ All files required for analysis and all script outputs are stored in "SARS_data"
 		* vaccinated_output_tables/
 	* Output:
 		* **Fig 5**
-		* naives.RData (merged iSNV frequency and gene annotation data per participant)
-		* vaccinateds.RData (merged iSNV frequency and gene annotation data per participant)
+		* naives.RData (merged iSNV frequency and gene annotation data for each participant)
+		* vaccinateds.RData (merged iSNV frequency and gene annotation data for each participant)
 
 ## Extras
 
