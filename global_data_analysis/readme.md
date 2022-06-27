@@ -8,14 +8,14 @@ All of these analyses are written in Bash and Python 3 using Numpy, Pandas, Matp
 
 These scripts were primarily written by [Michael Martin](https://github.com/m-a-martin) who can be reached on GitHub or at [mmart59@emory.edu](mailto:mmart59@emory.edu). 
 
-# Phylogenetic Analysis
+# Phylogenetic analysis
 This analysis downsamles the GISAID available sequences, builds a phylogenetic tree using IQtree2, and plots the resultant tree with tips labelled by amino acid identity. 
 
 To run this analysis you will need the following starting files, all saved in `./data`: 
 
-  1. `metadata.tsv`: The full GISAID metadata file. For these analyses the file was downloaded on June 10th, 2022. Happy to privately share the exact file we used to anyone with a GISAID login.
-  2. `epi_isl_402124.fasta`: The epi_isl_402124 (WIV04) reference fasta file
-  3. `MN996528.gff3`: The corresponding WIV04 protein annotations, downloaded from [GenBank](https://www.ncbi.nlm.nih.gov/nuccore/MN996528)
+1. `metadata.tsv`: The full GISAID metadata file. For these analyses the file was downloaded on June 10th, 2022. Happy to privately share the exact file we used to anyone with a GISAID login.
+2. `epi_isl_402124.fasta`: The epi_isl_402124 (WIV04) reference fasta file
+3. `MN996528.gff3`: The corresponding WIV04 protein annotations, downloaded from [GenBank](https://www.ncbi.nlm.nih.gov/nuccore/MN996528)
 
 This analysis will conduct the following steps: 
  1. Down sampling the GISAID metadata to 100 sequences per month
@@ -28,21 +28,21 @@ This analysis will conduct the following steps:
 	3. 2C. Using TreeTime through the `scripts/clock_filter.py` wrapper to remove any sequences outside of 4IQD of the expected molecular clock, rooting at WIV04 and forcing WIV04 to remain in the filtered tree. The filtered newick file is available at `data/metadata_filtered_100_per_month_ref_aln.fasta_clockfilter.newick` 
 
 3. Plot filtered phylogenetic tree
-	A. 3A. Get the nucleotide position corresponding to each position in the codon of interest in WIV04 using Bash. The resultant file is available at `data/substitutions_ungapped_pos.csv`. Note: This method does not account for frameshift deletions.
-	B. For each codon of interest, get the corresponding nucleotides in each sequence in the tree and translate that sequence to an amino acid.
-	C. For each codon of interesting, plot the phylogenetic tree with tips annotated by amino acid identity IF they do not match the reference amino acid
-	<li>  </li>
-	<ol>
-		<li> 2A. Align sequences to WIV04 using MAFFT, removing any insertions relative to the reference </li>
-		<li> 2B. Build tree using IQ-Tree with a GTR+G4 substitution model, collapsing near zero branches. The resultant newick file is available at ``data/metadata_filtered_100_per_month_ref_aln.fasta.treefile``. </li>
-		<li> 2C. Using TreeTime through the `scripts/clock_filter.py` wrapper to remove any sequences outside of 4IQD of the expected molecular clock, rooting at WIV04 and forcing WIV04 to remain in the filtered tree. The filtered newick file is available at `data/metadata_filtered_100_per_month_ref_aln.fasta_clockfilter.newick` </li>
-	</ol>
-	<li> 3. Plot filtered phylogenetic tree </li>
-		<ol>
-			<li> 3A. Get the nucleotide position corresponding to each position in the codon of interest in WIV04 using Bash. The resultant file is available at `data/substitutions_ungapped_pos.csv`. Note: This method does not account for frameshift deletions. </li>
-			<li> 3B. For each codon of interest, get the corresponding nucleotides in each sequence in the tree and translate that sequence to an amino acid.</li>
-			<li> 3C. For each codon of interesting, plot the phylogenetic tree with tips annotated by amino acid identity IF they do not match the reference amino acid </li>
-		</ol>
+	1. 3A. Get the nucleotide position corresponding to each position in the codon of interest in WIV04 using Bash. The resultant file is available at `data/substitutions_ungapped_pos.csv`. Note: This method does not account for frameshift deletions.
+	2. For each codon of interest, get the corresponding nucleotides in each sequence in the tree and translate that sequence to an amino acid.
+	3. For each codon of interesting, plot the phylogenetic tree with tips annotated by amino acid identity IF they do not match the reference amino acid. 
+
+# Global histograms
+This analysis plots the frequency on non-reference amino acids at each site of interests over each month in the entire filtered GISAID alignment. 
+
+To run this analysis you will need the following starting files: 
+1. The fully, gapped GISAID alignment, saved as `msa_0527/msa_0527.fasta`. We downloaded this file on June 2nd, 2022. Happy to share privately the list of included accessions with anyone who has a GISAID login. 
+
+This analysis will conduct the following steps: 
+1. For each substitution of interest, get the amino acid for each sequence in the alignment. 
+	1. A. Isolate the gapped reference sequences from the `msa_0527/msa_0527.fasta` file. 
+	2. B. For each position in the ungapped reference sequence, get the corresponding position in the gapped alignment. 
+	3. C. For each of the substitutions of interest, get the corresponding position in the gapped alignment, not accounting for frameshift mutations. The resultant file is available at `data/substitutions_gapped_pos.csv`
 
 		
 
