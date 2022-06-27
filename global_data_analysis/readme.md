@@ -31,7 +31,7 @@ This analysis will conduct the following steps:
 	<li> 2. Build ML phylogenetic tree with down sampled sequences </li>
 	<ol>
 		<li> 2A. Align sequences to WIV04 using MAFFT, removing any insertions relative to the reference </li>
-		<li> 2B. Build tree using IQ-Tree with a GTR+G4 substitution model, collapsing near zero branches. The resultant newick file is available at `data/metadata_filtered_100_per_month_ref_aln.fasta.treefile`. </li>
+		<li> 2B. Build tree using IQ-Tree with a GTR+G4 substitution model, collapsing near zero branches. The resultant newick file is available at ``data/metadata_filtered_100_per_month_ref_aln.fasta.treefile``. </li>
 		<li> 2C. Using TreeTime through the `scripts/clock_filter.py` wrapper to remove any sequences outside of 4IQD of the expected molecular clock, rooting at WIV04 and forcing WIV04 to remain in the filtered tree. The filtered newick file is available at `data/metadata_filtered_100_per_month_ref_aln.fasta_clockfilter.newick` </li>
 	</ol>
 	<li> 3. Plot filtered phylogenetic tree </li>
