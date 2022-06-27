@@ -22,14 +22,16 @@ This analysis will conduct the following steps:
  	1. A. Filter the GISAID metadata to include only complete, high coverage sequences from human hosts with complete sampling dates. This step also excludes WIV04, which will be added in later. This is conducted using Bash.
  	2. B. Down sampling the filtered metadata file using the `scripts/downsample.py` Python3 script.
  	3. C. Sub setting the down sampled metadata file to just the GISAID accessions with Bash. Accession file is available at `data/metadata_filtered_100_per_month_acc.tsv`
-<ol>
-	<li> 1. Down sampling the GISAID metadata to 100 sequences per month </li>
-	<ol>
-		<li> A. Filter the GISAID metadata to include only complete, high coverage sequences from human hosts with complete sampling dates. This step also excludes WIV04, which will be added in later. This is conducted using Bash. </li>
-		<li> B. Down sampling the filtered metadata file using the `scripts/downsample.py` Python3 script.</li>
-		<li> C. Sub setting the down sampled metadata file to just the GISAID accessions with Bash. Accession file is available at `data/metadata_filtered_100_per_month_acc.tsv`. </li>
-	</ol>
-	<li> 2. Build ML phylogenetic tree with down sampled sequences </li>
+ 2. Build ML phylogenetic tree with down sampled sequences
+	1. 2A. Align sequences to WIV04 using MAFFT, removing any insertions relative to the reference
+	2. 2B. Build tree using IQ-Tree with a GTR+G4 substitution model, collapsing near zero branches. The resultant newick file is available at ``data/metadata_filtered_100_per_month_ref_aln.fasta.treefile``.
+	3. 2C. Using TreeTime through the `scripts/clock_filter.py` wrapper to remove any sequences outside of 4IQD of the expected molecular clock, rooting at WIV04 and forcing WIV04 to remain in the filtered tree. The filtered newick file is available at `data/metadata_filtered_100_per_month_ref_aln.fasta_clockfilter.newick` 
+
+3. Plot filtered phylogenetic tree
+	A. 3A. Get the nucleotide position corresponding to each position in the codon of interest in WIV04 using Bash. The resultant file is available at `data/substitutions_ungapped_pos.csv`. Note: This method does not account for frameshift deletions.
+	B. For each codon of interest, get the corresponding nucleotides in each sequence in the tree and translate that sequence to an amino acid.
+	C. For each codon of interesting, plot the phylogenetic tree with tips annotated by amino acid identity IF they do not match the reference amino acid
+	<li>  </li>
 	<ol>
 		<li> 2A. Align sequences to WIV04 using MAFFT, removing any insertions relative to the reference </li>
 		<li> 2B. Build tree using IQ-Tree with a GTR+G4 substitution model, collapsing near zero branches. The resultant newick file is available at ``data/metadata_filtered_100_per_month_ref_aln.fasta.treefile``. </li>
