@@ -3,7 +3,7 @@ This workflow helps to replicate the analyses presented in Figure SX of [Within-
 
 The purpose of these analyses were to estimate the prevalence of specific amino acid substitutions observed within single hosts in globally sampled sequences available from the GISAID EpiCoV database (https://www.gisaid.org). The acknowledgement table for all sequences included in this analysis can be found [here](https://doi.org/10.55876/gis8.220621ms). Because of GISAID rules we cannot share the exact data files or intermediate files which were used in these analyses. However, we have provided a list of accession numbers for each of the two analyses and thus anyone with a free GISAID login should be able to download the necessary data. All analyses use epi_isl_402124 (WIV04) as a reference. The amino acids we're interested in are orf1ab 124, orf1ab 1150, orf1ab 5402, E 8, N 389.
 
-`git status`
+1. `git status`
 
 All of these analyses are written in Bash and Python 3 using Numpy, Pandas, Matplotlib, and Baltic. The `scripts/run_all.sh` file should run all analyses, assuming you have downloaded the necessary files. 
 
