@@ -14,7 +14,7 @@ This analysis downsamles the GISAID available sequences, builds a phylogenetic t
 To run this analysis you will need the following starting files, all saved in `./data`: 
 
 <ol>
-  <li>`metadata.tsv`: The full GISAID metadata file. For these analyses the file was downloaded on June 10th, 2022. Happy to privately share the exact file we used to anyone with a GISAID login. </li>
+  <li> `git status` `metadata.tsv`: The full GISAID metadata file. For these analyses the file was downloaded on June 10th, 2022. Happy to privately share the exact file we used to anyone with a GISAID login. </li>
   <li>`epi_isl_402124.fasta`: The epi_isl_402124 (WIV04) reference fasta file </li>
   <li>`MN996528.gff3`: The corresponding WIV04 protein annotations, downloaded from [GenBank](https://www.ncbi.nlm.nih.gov/nuccore/MN996528)</li>
   <li> </li>
