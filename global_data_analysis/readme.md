@@ -29,8 +29,8 @@ This analysis will conduct the following steps:
 
 3. Plot filtered phylogenetic tree
 	1. 3A. Get the nucleotide position corresponding to each position in the codon of interest in WIV04 using Bash. The resultant file is available at `data/substitutions_ungapped_pos.csv`. Note: This method does not account for frameshift deletions.
-	2. For each codon of interest, get the corresponding nucleotides in each sequence in the tree and translate that sequence to an amino acid.
-	3. For each codon of interesting, plot the phylogenetic tree with tips annotated by amino acid identity IF they do not match the reference amino acid. 
+	2. For each codon of interest, get the corresponding nucleotides in each sequence in the tree and translate that sequence to an amino acid using the `scripts/translate_codon.py` Python3 script. 
+	3. For each codon of interest, plot the phylogenetic tree with tips annotated by amino acid identity IF they do not match the reference amino acid using the `scripts/plot_tree.py` Python3 script.
 
 # Global histograms
 This analysis plots the frequency on non-reference amino acids at each site of interests over each month in the entire filtered GISAID alignment. 
@@ -40,9 +40,9 @@ To run this analysis you will need the following starting files:
 
 This analysis will conduct the following steps: 
 1. For each substitution of interest, get the amino acid for each sequence in the alignment. 
-	1. A. Isolate the gapped reference sequences from the `msa_0527/msa_0527.fasta` file. 
-	2. B. For each position in the ungapped reference sequence, get the corresponding position in the gapped alignment. 
-	3. C. For each of the substitutions of interest, get the corresponding position in the gapped alignment, not accounting for frameshift mutations. The resultant file is available at `data/substitutions_gapped_pos.csv`
+	1. A. Isolate the gapped reference sequences from the `msa_0527/msa_0527.fasta` file using the `scripts/isolate_seq.py` Python3 script. 
+	2. B. For each position in the ungapped reference sequence, get the corresponding position in the gapped alignment using Bash. 
+	3. C. For each of the substitutions of interest, get the corresponding position in the gapped alignment, not accounting for frameshift mutations using Bash. The resultant file is available at `data/substitutions_gapped_pos.csv`
 
 		
 
