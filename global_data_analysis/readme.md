@@ -19,9 +19,9 @@ To run this analysis you will need the following starting files, all saved in `.
 
 This analysis will conduct the following steps: 
  1. Down sampling the GISAID metadata to 100 sequences per month
- 	* A. Filter the GISAID metadata to include only complete, high coverage sequences from human hosts with complete sampling dates. This step also excludes WIV04, which will be added in later. This is conducted using Bash.
- 	* B. Down sampling the filtered metadata file using the `scripts/downsample.py` Python3 script.
- 	* C. Sub setting the down sampled metadata file to just the GISAID accessions with Bash. Accession file is available at `data/metadata_filtered_100_per_month_acc.tsv`
+ 	1. A. Filter the GISAID metadata to include only complete, high coverage sequences from human hosts with complete sampling dates. This step also excludes WIV04, which will be added in later. This is conducted using Bash.
+ 	2. B. Down sampling the filtered metadata file using the `scripts/downsample.py` Python3 script.
+ 	3. C. Sub setting the down sampled metadata file to just the GISAID accessions with Bash. Accession file is available at `data/metadata_filtered_100_per_month_acc.tsv`
 <ol>
 	<li> 1. Down sampling the GISAID metadata to 100 sequences per month </li>
 	<ol>
