@@ -209,9 +209,11 @@ do
     p2=$(echo $line | awk -F',' '{print $9}')
     p3=$(echo $line | awk -F',' '{print $10}')
     outfile=${seqs_gapped%.fasta}_${p1}_${p2}_${p3}.tsv
+    # get nucleotides in codon
     python3 scripts/isolate_fasta_region.py \
     	--seqs $seqs_gapped \
     	--pos $p1 $p2 $p3  > $outfile
+    # translate the codon 
     paste \
 		<(tail -n +2 $outfile | cut -f 1 -) \
 		<(tail -n+2 $outfile | cut -f 2- -  | \
@@ -222,6 +224,10 @@ do
 		${metadata%.tsv}_filtered_ref.tsv \
 		${outfile%.tsv}_${codon}.tsv \
 		> ${outfile%.tsv}_date_${codon}.tsv 
+	# save list of just accession numbers 
+	cut -d"|" -f 2 ${outfile%.tsv}_date_${codon}.tsv  \
+		> ${outfile%.tsv}_date_${codon}_acc.tsv 
+	7z a ${outfile%.tsv}_date_${codon}_acc.tsv.7z ${outfile%.tsv}_date_${codon}_acc.tsv 
 done < data/substitutions_gapped_pos.csv
 
 ## 3. PLOT SUBSTITUTION HISTOGRAMS ##
