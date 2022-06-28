@@ -146,11 +146,17 @@ done < data/substitutions_ungapped_pos.csv
 
 
 #############################################
-########## SUBSTITUTION HISTOGRAMS ##########
+########## SUBSTITUTION BAR CHARTS ##########
 #############################################
 
 #### 1. GAPPED SUBSTITUTION POSITIONS ####
-## 1A. GAPPED POSITION MAPPING ##
+## 1A. GET THE GAPPED REFERENCE SEQUENCE
+python3 scripts/isolate_seq.py \
+	--seqs ${seqs_gapped} \
+	--getSeq "|${ref_id}|" \
+	> ${seqs_gapped%.fasta}_${ref_id}.fasta
+
+## 1B. GAPPED POSITION MAPPING ##
 # from the gapped alignment, 
 # get the gapped position for each ungapped position
 grep -v ">" ${seqs_gapped%.fasta}_${ref_id}.fasta | \
@@ -158,7 +164,7 @@ grep -v ">" ${seqs_gapped%.fasta}_${ref_id}.fasta | \
 	>  ${seqs_gapped%.fasta}_${ref_id}_gappedPos.txt
 
 
-## 1B. GETTING NUCLEOTIDE POSITIONS FOR SUBSTITUTIONS OF INTEREST ##
+## 1C. GETTING NUCLEOTIDE POSITIONS FOR SUBSTITUTIONS OF INTEREST ##
 rm -rf data/substitutions_gapped_pos.csv
 while read -r line; 
 do 
@@ -227,7 +233,7 @@ do
     p3=$(echo $line | awk -F',' '{print $10}')
     outfile=${seqs_gapped%.fasta}_${p1}_${p2}_${p3}_date_${codon}.tsv
     ptitle=$(echo $line | awk -F',' '{print $1" "$3$2 }')
-	python3 scripts/plot_histogram.py \
+	python3 scripts/plot_bar.py \
 		--metadata $outfile \
 		--metadataDateCol 1 \
 		--metadataAnnCol 2 \
