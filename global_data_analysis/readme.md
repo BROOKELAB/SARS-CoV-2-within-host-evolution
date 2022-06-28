@@ -19,32 +19,33 @@ To run this analysis you will need the following starting files, all saved in `.
 
 This analysis will conduct the following steps: 
  1. Down sampling the GISAID metadata to 100 sequences per month
- 	1. A. Filter the GISAID metadata to include only complete, high coverage sequences from human hosts with complete sampling dates. This step also excludes WIV04, which will be added in later. This is conducted using Bash.
- 	2. B. Down sampling the filtered metadata file using the `scripts/downsample.py` Python3 script.
- 	3. C. Sub setting the down sampled metadata file to just the GISAID accessions with Bash. Accession file is available at `data/metadata_filtered_100_per_month_acc.tsv`
+ 	1. Filter the GISAID metadata to include only complete, high coverage sequences from human hosts with complete sampling dates. This step also excludes WIV04, which will be added in later. This is conducted using Bash.
+ 	2. Down sampling the filtered metadata file using the `scripts/downsample.py` Python3 script.
+ 	3. Sub setting the down sampled metadata file to just the GISAID accessions with Bash. Accession file is available at `data/metadata_filtered_100_per_month_acc.tsv`
  2. Build ML phylogenetic tree with down sampled sequences
-	1. 2A. Align sequences to WIV04 using MAFFT, removing any insertions relative to the reference
-	2. 2B. Build tree using IQ-Tree with a GTR+G4 substitution model, collapsing near zero branches. The resultant newick file is available at ``data/metadata_filtered_100_per_month_ref_aln.fasta.treefile``.
-	3. 2C. Using TreeTime through the `scripts/clock_filter.py` wrapper to remove any sequences outside of 4IQD of the expected molecular clock, rooting at WIV04 and forcing WIV04 to remain in the filtered tree. The filtered newick file is available at `data/metadata_filtered_100_per_month_ref_aln.fasta_clockfilter.newick` 
+	1. Align sequences to WIV04 using MAFFT, removing any insertions relative to the reference
+	2. Build tree using IQ-Tree with a GTR+G4 substitution model, collapsing near zero branches. The resultant newick file is available at ``data/metadata_filtered_100_per_month_ref_aln.fasta.treefile``.
+	3. Using TreeTime through the `scripts/clock_filter.py` wrapper to remove any sequences outside of 4IQD of the expected molecular clock, rooting at WIV04 and forcing WIV04 to remain in the filtered tree. The filtered newick file is available at `data/metadata_filtered_100_per_month_ref_aln.fasta_clockfilter.newick` 
 
 3. Plot filtered phylogenetic tree
-	1. 3A. Get the nucleotide position corresponding to each position in the codon of interest in WIV04 using Bash. The resultant file is available at `data/substitutions_ungapped_pos.csv`. Note: This method does not account for frameshift deletions.
-	2. For each codon of interest, get the corresponding nucleotides in each sequence in the tree and translate that sequence to an amino acid using the `scripts/translate_codon.py` Python3 script. 
+	1. Get the nucleotide position corresponding to each position in the codon of interest in WIV04 using Bash. The resultant file is available at `data/substitutions_ungapped_pos.csv`. Note: This method does not account for frameshift deletions.
+	2. For each codon of interest, get the corresponding nucleotides in each sequence in the tree using the `scripts/isolate_fasta_region.py` Python3 script and translate that sequence to an amino acid using the `scripts/translate_codon.py` Python3 script. 
 	3. For each codon of interest, plot the phylogenetic tree with tips annotated by amino acid identity IF they do not match the reference amino acid using the `scripts/plot_tree.py` Python3 script.
 
-# Global histograms
+# Global bar graphs
 This analysis plots the frequency on non-reference amino acids at each site of interests over each month in the entire filtered GISAID alignment. 
 
 To run this analysis you will need the following starting files: 
 1. The fully, gapped GISAID alignment, saved as `msa_0527/msa_0527.fasta`. We downloaded this file on June 2nd, 2022. Happy to share privately the list of included accessions with anyone who has a GISAID login. 
 
 This analysis will conduct the following steps: 
-1. For each substitution of interest, get the amino acid for each sequence in the alignment. 
-	1. A. Isolate the gapped reference sequences from the `msa_0527/msa_0527.fasta` file using the `scripts/isolate_seq.py` Python3 script. 
-	2. B. For each position in the ungapped reference sequence, get the corresponding position in the gapped alignment using Bash. 
-	3. C. For each of the substitutions of interest, get the corresponding position in the gapped alignment, not accounting for frameshift mutations using Bash. The resultant file is available at `data/substitutions_gapped_pos.csv`
-
-		
+1. For each substitution of interest, get the nucleotide positions for the respective codon in the gapped alignment
+	1. Isolate the gapped reference sequences from the `msa_0527/msa_0527.fasta` file using the `scripts/isolate_seq.py` Python3 script. 
+	2. For each position in the ungapped reference sequence, get the corresponding position in the gapped alignment using Bash. 
+	3. For each of the substitutions of interest, get the corresponding position in the gapped alignment, not accounting for frameshift mutations using Bash. The resultant file is available at `data/substitutions_gapped_pos.csv` 
+2. For each of the substitutions of interest, get the corresponding codon and translate that to an amino acid for each sequence in the full GISAID alignment using the `scripts/isolate_fasta_region.py` and `scripts/translate_codon.py` Python3 scripts; filter that output file to include only complete, high coverage sequences from human hosts with complete sampling dates.
+3. Plot a histogram of the alterantive amino acid frequencies per month for each substitution of interesting using the `scripts/plot_bar.py` 
+	
 
 
 
