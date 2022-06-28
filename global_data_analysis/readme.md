@@ -43,7 +43,7 @@ This analysis will conduct the following steps:
 	1. Isolate the gapped reference sequences from the `msa_0527/msa_0527.fasta` file using the `scripts/isolate_seq.py` Python3 script. 
 	2. For each position in the ungapped reference sequence, get the corresponding position in the gapped alignment using Bash. 
 	3. For each of the substitutions of interest, get the corresponding position in the gapped alignment, not accounting for frameshift mutations using Bash. The resultant file is available at `data/substitutions_gapped_pos.csv` 
-2. For each of the substitutions of interest, get the corresponding codon and translate that to an amino acid for each sequence in the full GISAID alignment using the `scripts/isolate_fasta_region.py` and `scripts/translate_codon.py` Python3 scripts; filter that output file to include only complete, high coverage sequences from human hosts with complete sampling dates.
+2. For each of the substitutions of interest, get the corresponding codon and translate that to an amino acid for each sequence in the full GISAID alignment using the `scripts/isolate_fasta_region.py` and `scripts/translate_codon.py` Python3 scripts; filter that output file to include only complete, high coverage sequences from human hosts with complete sampling dates. The accession numbers included in each bar graph are available in `msa_0527/*_acc.tsv`. 
 3. Plot a histogram of the alterantive amino acid frequencies per month for each substitution of interesting using the `scripts/plot_bar.py` 
 	
 
