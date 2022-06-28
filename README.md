@@ -129,6 +129,7 @@ All files required for analysis and all script outputs are stored in "SARS_data"
 ## Extras
 
  * all_lineages.xlsx lists Pango lineages for each sample
+ * all_saliva_user_info.xlsx and all_nasal_user_info.xlsx contain dates of sampling and sample barcodes for saliva and nasal samples, respectively
  * user_selection/all_user_info.xlsx contains sampling dates for all participants
  * "color_palettes.R" contains the color palettes used to generate figures
  * "coverage_depths.R" matches coverage values with samples and generates:
