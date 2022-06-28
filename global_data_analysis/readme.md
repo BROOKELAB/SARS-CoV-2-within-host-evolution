@@ -6,7 +6,7 @@ The purpose of these analyses were to estimate the prevalence of specific amino 
 
 All of these analyses are written in Bash and Python 3 using Numpy, Pandas, Matplotlib, and Baltic. The `scripts/run_all.sh` file should run all analyses, assuming you have downloaded the necessary files. 
 
-These scripts were primarily written by [Michael Martin](https://github.com/m-a-martin) who can be reached on GitHub or at [mmart59@emory.edu](mailto:mmart59@emory.edu). 
+If you have any issues with these specific scripts contact [Michael Martin](https://github.com/m-a-martin) who can be reached on GitHub or at [mmart59@emory.edu](mailto:mmart59@emory.edu). 
 
 # Phylogenetic analysis
 This analysis downsamles the GISAID available sequences, builds a phylogenetic tree using IQtree2, and plots the resultant tree with tips labelled by amino acid identity. 
