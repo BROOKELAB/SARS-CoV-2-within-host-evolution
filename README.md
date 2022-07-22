@@ -51,7 +51,7 @@ All files required for analysis and all script outputs are stored in "SARS_data"
 	    * naive_output_tables/
     * Output:
 	    * **Fig 2A**
-	    * * naive_snpcounts.csv (daily iSNV counts per participant)
+	    * naive_snpcounts.csv (daily iSNV counts per participant)
 	    * naive_annotations.csv (iSNVs annotated by gene function)
 	    * naive_variant_tables/ (iSNV frequency tracking over time, tables imported into Prism to generate **Fig 6** and **Fig S2**)
 	    * naive_count_gather.RData (daily iSNV counts per participant in a ggplot-friendly format)
@@ -127,10 +127,10 @@ All files required for analysis and all script outputs are stored in "SARS_data"
 		* vaccinateds.RData (merged iSNV frequency and gene annotation data for each participant)
 
 ## Extras
-
- * all_lineages.xlsx lists Pango lineages for each sample
+ * SARS-CoV-2_samples.xlsx and SRA_data.xlsx contain raw sequence information and metadata
  * all_saliva_user_info.xlsx and all_nasal_user_info.xlsx contain dates of sampling and sample barcodes for saliva and nasal samples, respectively
  * user_selection/all_user_info.xlsx contains sampling dates for all participants
+ * all_lineages.xlsx lists Pango lineages for each sample
  * "color_palettes.R" contains the color palettes used to generate figures
  * "coverage_depths.R" matches coverage values with samples and generates:
 	 * saliva_coverage_depths.RData
