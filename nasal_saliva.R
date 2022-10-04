@@ -25,11 +25,11 @@ nasal.read2 <- function(file){
   file <- file %>%
     select(V2,V4,V5,V8,V10)%>%
     mutate("ID"=NA)%>%
-    rename("POS"=V2)%>%
-    rename("REF"=V4)%>%
-    rename("ALT"=V5)%>%
-    rename("INFO1"=V8)%>%
-    rename("INFO2"=V10)%>%
+    dplyr::rename("POS"=V2)%>%
+    dplyr::rename("REF"=V4)%>%
+    dplyr::rename("ALT"=V5)%>%
+    dplyr::rename("INFO1"=V8)%>%
+    dplyr::rename("INFO2"=V10)%>%
     mutate("ALT_FREQ"=NA)%>%
     mutate("DP"=NA)
   for(i in seq_along(file$INFO1)){
@@ -142,7 +142,7 @@ for(i in seq_along(saliva.files)){
 for(i in seq_along(saliva.files)){
   for(j in seq_along(saliva.files[[i]])){
     saliva.files[[i]][[j]] <- saliva.files[[i]][[j]]%>%
-      rename("ID" = REGION)
+      dplyr::rename("ID" = REGION)
   }
 }
 
@@ -166,7 +166,7 @@ for(i in seq_along(saliva.files)){
 }
 saliva.clean <- function(file){
   file <- file %>%
-    rename("DP"=TOTAL_DP)%>%
+    dplyr::rename("DP"=TOTAL_DP)%>%
     select(POS,REF,ALT,ALT_FREQ,DP)
   file$DP <- as.numeric(file$DP)
   file <- file %>%
@@ -235,7 +235,6 @@ for(i in seq_along(saliva.files)){
   }
 }
 
-
 #cutting out files that exist in nasal but not saliva
 #and vice versa
 nasal.files$user_442978 <- nasal.files$user_442978[-4]
@@ -246,7 +245,7 @@ saliva.files$user_451152 <- saliva.files$user_451152[-c(1,7,8)]
 saliva.files$user_471467 <- saliva.files$user_471467[-c(2,7)]
 saliva.files$user_471588 <- saliva.files$user_471588[-c(1,6)]
 
-#cutting out the missing files from saliva set (FOR NOW)
+#cutting out the missing files from saliva set
 #these numbers are all adjusted to account for deletion i did above
 saliva.files$user_432686 <- saliva.files$user_432686[-c(5,6)]
 saliva.files$user_433227 <- saliva.files$user_433227[-1]
@@ -257,7 +256,7 @@ saliva.files$user_459597 <- saliva.files$user_459597[-c(1,2)]
 saliva.files$user_471467 <- saliva.files$user_471467[-c(1,7,8)]
 saliva.files$user_471588 <- saliva.files$user_471588[-c(5:7)]
 
-#new cutoff deletions
+#remove empty files that have been excluded for low coverage
 nasal.files$user_432686 <- nasal.files$user_432686[-c(2)] #2 nasal
 saliva.files$user_432686 <- saliva.files$user_432686[-c(2)]
 nasal.files$user_433227 <- nasal.files$user_433227[-c(1,6)] #all saliva
@@ -615,7 +614,7 @@ for(i in seq_along(nasal.files)){
 }
 
 
-#label low dp as such
+#label low dp as X
 for(i in seq_along(nasal.files)){
   for(j in seq_along(nasal.files[[i]])){
     for(k in seq_along(nasal.files[[i]][[j]]$POS))
@@ -632,6 +631,9 @@ for(i in seq_along(saliva.files)){
       }
   }
 }
+
+save(nasal.files, file = "nasal_files.RData")
+save(saliva.files, file = "saliva_files.RData")
 
 #comparison tables
 env.comp <- function(nasal,saliva){
@@ -652,8 +654,8 @@ for(i in seq_along(nasal.files)){
 for(i in seq_along(comp.tables)){
   for(j in seq_along(comp.tables[[i]])){
     comp.tables[[i]][[j]] <- comp.tables[[i]][[j]] %>%
-      rename("NASAL_FREQ"=ALT_FREQ.x)%>%
-      rename("SALIVA_FREQ"=ALT_FREQ.y)%>%
+      dplyr::rename("NASAL_FREQ"=ALT_FREQ.x)%>%
+      dplyr::rename("SALIVA_FREQ"=ALT_FREQ.y)%>%
       select(POS,REF,ALT,SNP,NASAL_FREQ,SALIVA_FREQ)
   }
 }
@@ -844,7 +846,7 @@ for(i in seq_along(comp.list)){
   comp.list[[i]][is.na(comp.list[[i]])] <- NaN
 }
 
-filenames <- paste0("comparison_tables_051022/",names(comp.list),".csv")
+filenames <- paste0("comparison_tables/",names(comp.list),".csv")
 for(i in seq_along(comp.list)){
   write.csv(comp.list[[i]],filenames[[i]])
 }
@@ -885,8 +887,51 @@ unlist.comp <- select(unlist.comp,NASAL_FREQ,SALIVA_FREQ)
 unlist.comp <- na.omit(unlist.comp)
 write.csv(unlist.comp,"nasal_saliva_freqs.csv")
 
+#distribution of saliva iSNVs missing from nasal
+load("comparison_list.RData")
 
 
+missing.distribution <- function(user){
+  saliva.only <- user[,grep("SALIVA",colnames(user))]
+  nasal.only <- user[,grep("NASAL",colnames(user))]
+  for(i in seq_along(colnames(saliva.only))){
+    saliva.only[,i] <- coalesce(saliva.only[,i],"X")
+    nasal.only[,i] <- coalesce(nasal.only[,i],"X")
+  }
+  
+  dis.matrix <- as.data.frame(matrix(nrow = nrow(saliva.only), 
+                                     ncol = ncol(saliva.only),
+                                     data = NA))
+  colnames(dis.matrix) <- colnames(saliva.only)
+  
+  
+  for(i in seq_along(rownames(saliva.only))){
+    for(j in seq_along(colnames(saliva.only))){
+      if(nasal.only[i,j] == 0){
+        dis.matrix[i,j] <- saliva.only[i,j]
+      }
+    }
+  }
+  dis.vec <- na.omit(as.numeric(unlist(flatten(dis.matrix))))
+  return(dis.vec)
+}
+
+distributions <- lapply(comp.list,missing.distribution)
+distributions <- unlist(distributions)
+#hist(unlist(distributions))
+test <- as.data.frame(distributions)
+  
+ggplot(test, aes(x = distributions))+
+  geom_histogram(aes(y=stat(density)), bins =100)+
+  geom_density()+
+  xlab("Frequency")+
+  ylab("Density")+
+  ggtitle("Frequency distribution of saliva iSNVs \nmissing from nasal compartment")+
+  theme_bw()+
+  theme(axis.title = element_text(size = 22),
+          axis.text = element_text(size = 19),
+          plot.title = element_text(size = 22))
+ggsave("figs/saliva_distribution.png")
 
 
 
