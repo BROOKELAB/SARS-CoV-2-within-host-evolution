@@ -19,7 +19,7 @@ This project uses R (v4.1.1) and associated packages in base R.
 * gtools (v3.9.2)
 * here (v1.0.1)
 
-All files required for analysis and all script outputs are stored in "SARS_data". To begin, download this folder and create a new R project within the directory. 
+All files required for analysis and all script outputs are stored in `SARS_data.zip`. To begin, download this folder and create a new R project within the directory. 
 
 # Workflow
 
@@ -70,7 +70,7 @@ All files required for analysis and all script outputs are stored in "SARS_data"
 	    * `vax_annotations.csv` (iSNVs annotated by gene function)
 	    * `vaccinated_variant_tables/` (iSNV frequency tracking over time, tables imported into Prism to generate **Fig 7** and **Fig S3**)
 	    * `vax_shared.RData` (summary of iSNV data)
-3. Run "data_analysis.R"
+3. Run `data_analysis.R`
     * Folders and files required:
 	    * `naive_snpcounts.RData`
 	    * `vax_snpcounts.RData`
