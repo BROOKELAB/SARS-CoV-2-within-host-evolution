@@ -2,10 +2,9 @@ library(tidyverse)
 library(rio)
 library(here)
 
-nct <- import("user_selection/nct_vs_coverage.xlsx")
+nct <- import("nct_vs_coverage.xlsx")
 nct.lm <- lm(Coverage~`N gene ct`,nct)
 #p-value: 0.02359
-
 
 ggplot(data = nct, aes(x = `N gene ct`,y = Coverage))+
   geom_point(size=4)+
