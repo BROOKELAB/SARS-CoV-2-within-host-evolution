@@ -14,6 +14,7 @@ This project uses R (v4.1.1) and associated packages in base R.
 
 * tidyverse (v1.3.1)
 * rio (v0.5.27)
+* rlist (v0.4.6.2)
 * trackViewer (v1.28.1)
 * gtools (v3.9.2)
 * here (v1.0.1)
@@ -22,116 +23,126 @@ All files required for analysis and all script outputs are stored in "SARS_data"
 
 # Workflow
 
-## 1. Relationship between sample Ct and sequence quality *(Fig 1)*
+## 1. Relationship between sample Ct and sequence quality *(Fig 1, S1)*
 
-1. Run "nct_vs_coverage.R"
+1. Run `nct_vs_coverage.R`
     * Folders and files required:
-	    * user_selection/nct_vs_coverage.xlsx
+	    * `nct_vs_coverage.xlsx`
     * Output: 
        * **Fig 1A**
- 2. Run "dilutioncontrol.R". 
+ 2. Run `dilutioncontrol.R`
     * Folders and files required:
-        * dilution_output_tables/
-        * dilution_controls/ct26_dilutions.csv
-        * dilution_controls/ct28_dilutions.csv
-        * dilution_controls/ct23_dilutions.csv
+        * `dilution_output_tables/`
+        * `dilution_controls/ct26_dilutions.csv`
+        * `dilution_controls/ct28_dilutions.csv`
+        * `dilution_controls/ct23_dilutions.csv`
     * Output: 
         * **Fig 1B**
-  3. Run "ct_vs_snps.R"
+  3. Run `ct_vs_snps.R`
       * Folders and files required: 
-	      * naive_ct.xlsx
-	      * vaccinated_ct.csv
+	      * `naive_ct.xlsx`
+	      * `vaccinated_ct.csv`
+	      * `naive_daily_shared.RData`
+	      * `vax_daily_shared.RData`
       * Output: 
 	      * **Fig 1C**
+	      * **Fig S1**
 	      
-## 2. Within-host diversity and iSNV tracking *(Fig 2, 6, 7, S2, S3)*
+## 2. Within-host diversity and iSNV tracking *(Fig 2, 5, 6, S5, S6)*
 
-1. Run "naivevariants.R"
+1. Run `naivevariants.R`
     * Folders and files required:
-	    * naive_output_tables/
+	    * `naive_output_tables/`
     * Output:
 	    * **Fig 2A**
-	    * naive_snpcounts.csv (daily iSNV counts per participant)
-	    * naive_annotations.csv (iSNVs annotated by gene function)
-	    * naive_variant_tables/ (iSNV frequency tracking over time, tables imported into Prism to generate **Fig 6** and **Fig S2**)
-	    * naive_count_gather.RData (daily iSNV counts per participant in a ggplot-friendly format)
-	    * naive_shared.RData (summary of iSNV data)
-2. Run "vaccinatedvariants.R"
+	    * `naive_snpcounts.RData` (daily iSNV counts per participant)
+	    * `naive_daily_shared.RData` (daily shared iSNV counts per participant)
+	    * `naive_annotations.csv` (iSNVs annotated by gene function)
+	    * `naive_variant_tables/` (iSNV frequency tracking over time, tables imported into Prism to generate **Fig 6** and **Fig S2**
+	    * `naive_shared.RData` (summary of iSNV data)
+2. Run `vaccinatedvariants.R`
     * Folders and files required: 
-	    * vaccinated_output_tables/
+	    * `vaccinated_output_tables/`
     * Output:
 	    * **Fig 2B**
-	    * vaccinated_snpcounts.csv (daily iSNV counts per participant)
-	    * vaccinated_annotations.csv (iSNVs annotated by gene function)
-	    * vaccinated_variant_tables/ (iSNV frequency tracking over time, tables imported into Prism to generate **Fig 7** and **Fig S3**)
-	    * vax_count_gather.RData (daily iSNV counts per participant in ggplot-friendly format)
-	    * vaccinated_shared.RData (summary of iSNV data)
+	    * `vax_snpcounts.RData` (daily iSNV counts per participant)
+	    * `vax_daily_shared.RData` (daily shared iSNV counts per participant)
+	    * `vax_annotations.csv` (iSNVs annotated by gene function)
+	    * `vaccinated_variant_tables/` (iSNV frequency tracking over time, tables imported into Prism to generate **Fig 7** and **Fig S3**)
+	    * `vax_shared.RData` (summary of iSNV data)
 3. Run "data_analysis.R"
     * Folders and files required:
-	    * naive_count_gather.RData
-	    * vax_count_gather.RData
-	    * naive_annorations.csv
-	    * vaccinated_annotations.csv
+	    * `naive_snpcounts.RData`
+	    * `vax_snpcounts.RData`
+	    * `naive_shared.RData`
+	    * `vax_shared.RData`
+	    * `naive_ct.xlsx`
+	    * `vaccinated_ct.csv`
+	    * `naive_annotations.csv`
+	    * `vaccinated_annotations.csv`
     * Output:
 	    * **Fig 2C**
 	    * **Fig 2D**
 	    * Statistics on iSNV counts and distributions
 
-## 3. iSNV mapping along the SARS-CoV-2 genome *(Fig 3, S1)*
+## 3. iSNV mapping along the SARS-CoV-2 genome *(Fig 3, S2)*
 
-1. Run "geneSNPs.R"
+1. Run `geneSNPs.R`
     * Folders and files required:
-        * naive_annotations.csv
-        * vaccinated_annotations.csv
+        * `naive_annotations.csv`
+        * `vaccinated_annotations.csv`
      * Output:
 	     * **Fig 3**
-	     * **Fig S1**
+	     * **Fig S2**
 
+## 4. Nasal versus saliva sample coverage *(Fig S3A,B)*
 
-## 4. Nasal samples and environmental compartmentalization *(Fig 4, S4)*
-
-1. Run "nasal_saliva.R"
+1. Run `coverage_depths.R`
 	* Folders and files required:
-		* nasal_output_tables/
-		* nasal_coverage_depths.RData
-		* saliva_output_tables/
-		* saliva_coverage_depths.RData
+		* `saliva_coverage_summaries/`
+		* `nasal_coverage_summaries/`
 	* Output:
-		* comparison_list.RData (R list object of tables comparing iSNV frequencies in nasal and saliva samples for each participant)
-		* comparison_tables/ (tables of nasal and saliva iSNV frequencies for each participant in .csv format)
-		* nasal_saliva_freqs.csv (table of all nasal and saliva iSNV frequencies, imported into Prism to generate **Fig 4A**)
-2. Run "FST.R"
+		* **Fig S3A**
+		* **Fig S3B**
+		* `saliva_coverage_depths.RData`
+		* `nasal_coverage_depths.Rdata`
+
+## 5. Nasal samples and environmental compartmentalization *(Fig 4, S3C, S4, S7)*
+
+1. Run `nasal_saliva.R`
+	* Folders and files required:
+		* `nasal_output_tables/`
+		* `nasal_coverage_depths.RData`
+		* `saliva_output_tables/`
+		* `saliva_coverage_depths.RData`
+	* Output:
+		* **Fig S3C**
+		* `comparison_list.RData` (R list object of tables comparing iSNV frequencies in nasal and saliva samples for each participant)
+		* `comparison_tables/` (tables of nasal and saliva iSNV frequencies for each participant in .csv format)
+		* `nasal_saliva_freqs.csv` (table of all nasal and saliva iSNV frequencies, imported into Prism to generate **Fig 4A**)
+2. Run `FST.R`
    * Folders and files required:
-	   * comparison_list.RData
+	   * `comparison_list.RData`
    * Output:
 	   * **Fig 4B**
-	   * user_fst.RData (R list object containing within- and between-environment FST values for each individual)
-	   * FST_tables/ (.csv tables of within- and between-environment FST values for each individual)
-	   * FST_significance.csv (significance values for comparisons of FSTs in within- vs. between-environment pairings)
-3. Run "nasalvariants.R"
+	   * `user_fst.RData` (R list object containing within- and between-environment FST values for each individual)
+	   * `FST_tables/` (.csv tables of within- and between-environment FST values for each individual)
+	   * `FST_significance.csv` (significance values for comparisons of FSTs in within- vs. between-environment pairings)
+3. Run `monte_carlo.R`
    * Folders and files required:
-	   * nasal_output_tables/
+	   * `comparison_list.RData`
    * Output:
-	   * nasal_snpcounts.csv (daily iSNV counts per participant)
-	   * nasal_variant_tables/ (iSNV frequency tracking over time, tables imported into Prism to generate **Fig S4**)
-
-## 5. dN/dS ratios *(Fig 5)*
-
-1. Run "dNdS.R"
-	* Folders and files required:
-		* naive_output_tables/
-		* vaccinated_output_tables/
-	* Output:
-		* **Fig 5**
-		* naives.RData (merged iSNV frequency and gene annotation data for each participant)
-		* vaccinateds.RData (merged iSNV frequency and gene annotation data for each participant)
+	   * **Fig S4**
+4. Run `nasalvariants.R`
+   * Folders and files required:
+	   * `nasal_output_tables/`
+   * Output:
+	   * `nasal_snpcounts.csv` (daily iSNV counts per participant)
+	   * `nasal_variant_tables/` (iSNV frequency tracking over time, tables imported into Prism to generate **Fig S7**)
 
 ## Extras
  * SARS-CoV-2_samples.xlsx and SRA_data.xlsx contain raw sequence information and metadata
- * all_saliva_user_info.xlsx and all_nasal_user_info.xlsx contain dates of sampling and sample barcodes for saliva and nasal samples, respectively
- * user_selection/all_user_info.xlsx contains sampling dates for all participants
- * all_lineages.xlsx lists Pango lineages for each sample
- * "color_palettes.R" contains the color palettes used to generate figures
- * "coverage_depths.R" matches coverage values with samples and generates:
-	 * saliva_coverage_depths.RData
-	 * nasal_coverage_depths.RData
+ * `all_saliva_user_info.xlsx` and `all_nasal_user_info.xlsx` contain dates of sampling and sample barcodes for saliva and nasal samples, respectively
+ * `all_lineages.xlsx` lists Pango lineages for each sample
+ * `color_palettes.R` contains the color palettes used to generate figures
+
