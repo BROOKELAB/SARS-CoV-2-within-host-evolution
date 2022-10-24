@@ -40,7 +40,7 @@ calc.FST <- function(sample1,sample2){
 calc.nasal.FST <- function(user){
   nasal <- user[,grep("NASAL",colnames(user))]
   cj <- expand.grid(seq_along(nasal), seq_along(nasal))
-  cj <- cj[-which(cj$Var1 >= cj$Var2),] #just < if btwn env
+  cj <- cj[-which(cj$Var1 >= cj$Var2),]
   fst <- list()
   for(i in seq_along(cj$Var1)){
     fst[[i]] <- calc.FST(nasal[[cj$Var1[[i]]]],nasal[[cj$Var2[[i]]]])
@@ -54,7 +54,7 @@ all.nasal.fst <- unlist(nasal.fst)
 calc.saliva.FST <- function(user){
   saliva <- user[,grep("SALIVA",colnames(user))]
   cj <- expand.grid(seq_along(saliva), seq_along(saliva))
-  cj <- cj[-which(cj$Var1 >= cj$Var2),] #just < if btwn env
+  cj <- cj[-which(cj$Var1 >= cj$Var2),]
   fst <- list()
   for(i in seq_along(cj$Var1)){
     fst[[i]] <- calc.FST(saliva[[cj$Var1[[i]]]],saliva[[cj$Var2[[i]]]])
@@ -103,10 +103,16 @@ colnames(stat.matrix) <- c("nasal_vs_saliva","nasal_vs_between","saliva_vs_betwe
 rownames(stat.matrix) <- c(names(comp.list))
 
 for(i in seq_along(rownames(stat.matrix))){
-  stat.matrix[i,1] <- (t.test(nasal.fst[[i]],saliva.fst[[i]],var.equal = T))$p.value
+  if(length(which(!is.na(nasal.fst[[i]]))) > 1 &&
+     length(which(!is.na(saliva.fst[[i]]))) > 1){
+    stat.matrix[i,1] <- (t.test(nasal.fst[[i]],saliva.fst[[i]],var.equal = T))$p.value
+  } else {
+    stat.matrix[i,1] <- NA
+  }
   stat.matrix[i,2] <- (t.test(nasal.fst[[i]],between.fst[[i]],var.equal = T))$p.value
   stat.matrix[i,3] <- (t.test(saliva.fst[[i]],between.fst[[i]],var.equal = T))$p.value
 }
+
 total.matrix <- matrix(nrow = 1, ncol = 3)
 colnames(total.matrix) <- c("nasal_vs_saliva","nasal_vs_between","saliva_vs_between")
 rownames(total.matrix) <- "total"
@@ -117,3 +123,63 @@ total.matrix[1,3] <- (t.test(all.saliva.fst,all.between.fst,var.equal = T))$p.va
 stat.matrix <- rbind(stat.matrix,total.matrix)
 
 write.csv(stat.matrix,"FST_significance.csv")
+
+
+#heatmaps
+heatmap.matrix <- function(user,fstuser){
+  nasal <- user[,grep("NASAL",colnames(user))]
+  saliva <- user[,grep("SALIVA",colnames(user))]
+  fullgrid <- expand.grid(seq_along(nasal), seq_along(saliva))
+  grid <- fullgrid[-which(fullgrid$Var1 >= fullgrid$Var2),]
+  usermat <- as.data.frame(matrix(ncol = 3, 
+                                  nrow = length(which(!is.na(fstuser$nasal_FST))) + 
+                                    length(which(!is.na(fstuser$saliva_FST)))+
+                                    length(fstuser$between_FST) + 
+                                    (2*length(nasal))))
+  colnames(usermat) <- c("Env1","Env2","FST")
+  
+  usermat$Env1 <- c(paste0("N",grid$Var1), paste0("S",grid$Var1), 
+                    paste0("N",fullgrid$Var1),paste0("N",seq_along(nasal)),
+                    paste0("S",seq_along(saliva)))
+  usermat$Env2 <- c(paste0("N",grid$Var2), paste0("S",grid$Var2), 
+                    paste0("S",fullgrid$Var2),paste0("N",seq_along(nasal)),
+                    paste0("S",seq_along(saliva)))
+  usermat$FST <- c(fstuser$nasal_FST[which(!is.na(fstuser$nasal_FST))],
+                   fstuser$saliva_FST[which(!is.na(fstuser$saliva_FST))],
+                   fstuser$between_FST,
+                   rep(0,2*length(nasal)))
+  return(usermat)
+}
+
+FST.matrix <- list()
+for(i in seq_along(comp.list)){
+  FST.matrix[[i]] <- heatmap.matrix(comp.list[[i]],user.fst[[i]])
+}
+names(FST.matrix) <- gsub("user_","",names(comp.list))
+
+FST.maps <- list()
+for(i in seq_along(FST.matrix)){
+  FST.maps[[i]] <- ggplot(data = FST.matrix[[i]], aes(x=Env1, y=Env2,fill=FST))+
+    geom_tile() +
+    scale_fill_viridis_c(limits = c(0,1),
+                         breaks = c(0,.25,.5,.75,1))+
+    ggtitle(names(FST.matrix)[[i]])+
+    theme_bw()+
+    theme(axis.title = element_blank(),
+          axis.text = element_text(size = 19,
+                                   face = "bold"),
+          legend.title = element_text(size = 22,
+                                      face = "bold"),
+          legend.text = element_text(size = 19,
+                                     face = "bold"),
+          plot.title = element_text(size = 22,
+                                    face = "bold"))
+  
+}
+names(FST.maps) <- names(FST.matrix)
+
+ggpubr::ggarrange(FST.maps$`459597`,FST.maps$`433227`,FST.maps$`432686`,
+                  nrow = 1, ncol = 3)
+
+
+

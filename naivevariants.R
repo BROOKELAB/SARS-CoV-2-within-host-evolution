@@ -21,6 +21,37 @@ sleek <- function(dir){
     sleekuser[[i]] <- user[[i]] %>%
       filter(ALT_FREQ>=.03,ALT_FREQ<=.97)%>%
       filter(ALT_DP + REF_DP >=1000)%>%
+      filter(POS != 6696)%>% #these are likely sequencing artifacts
+      filter(POS!= 11074)%>%
+      filter(POS != 15965)%>%
+      filter(POS!= 29051)%>%
+      filter(POS != 187) %>%
+      filter(POS != 1059) %>%
+      filter(POS != 2094) %>%
+      filter(POS != 3037) %>%
+      filter(POS != 3130) %>%
+      filter(POS != 6696) %>%
+      filter(POS != 6990) %>%
+      filter(POS != 8022) %>%
+      filter(POS != 10323) %>%
+      filter(POS != 10741) %>%
+      filter(POS != 11074) %>%
+      filter(POS != 13408) %>%
+      filter(POS != 14786) %>%
+      filter(POS != 19684) %>%
+      filter(POS != 20148) %>%
+      filter(POS != 21137) %>%
+      filter(POS != 24034) %>%
+      filter(POS != 24378) %>%
+      filter(POS != 25563) %>%
+      filter(POS != 26144) %>%
+      filter(POS != 26461) %>%
+      filter(POS != 26681) %>%
+      filter(POS != 28077) %>%
+      filter(POS != 28826) %>%
+      filter(POS != 28854) %>%
+      filter(POS != 29051) %>%
+      filter(POS != 29700) %>%
       select(POS,REF,ALT,ALT_DP,REF_DP,ALT_FREQ)%>%
       distinct()
   }
@@ -38,6 +69,37 @@ everything <- function(dir){
   for(i in 1:length(user)){
     everythinguser[[i]] <- user[[i]] %>%
       select(POS,REF,ALT,ALT_FREQ,TOTAL_DP)%>%
+      filter(POS != 6696)%>% #these are likely sequencing artifacts
+      filter(POS!= 11074)%>%
+      filter(POS != 15965)%>%
+      filter(POS!= 29051)%>%
+      filter(POS != 187) %>%
+      filter(POS != 1059) %>%
+      filter(POS != 2094) %>%
+      filter(POS != 3037) %>%
+      filter(POS != 3130) %>%
+      filter(POS != 6696) %>%
+      filter(POS != 6990) %>%
+      filter(POS != 8022) %>%
+      filter(POS != 10323) %>%
+      filter(POS != 10741) %>%
+      filter(POS != 11074) %>%
+      filter(POS != 13408) %>%
+      filter(POS != 14786) %>%
+      filter(POS != 19684) %>%
+      filter(POS != 20148) %>%
+      filter(POS != 21137) %>%
+      filter(POS != 24034) %>%
+      filter(POS != 24378) %>%
+      filter(POS != 25563) %>%
+      filter(POS != 26144) %>%
+      filter(POS != 26461) %>%
+      filter(POS != 26681) %>%
+      filter(POS != 28077) %>%
+      filter(POS != 28826) %>%
+      filter(POS != 28854) %>%
+      filter(POS != 29051) %>%
+      filter(POS != 29700) %>%
       distinct()
   }
   return(everythinguser)
@@ -88,7 +150,38 @@ eff <- function(dir){
   
   for(i in seq_along(effuser)){
     effuser[[i]] <- effuser[[i]] %>%
-      select(POS,REF,ALT,GENE,EFF,AA)
+      select(POS,REF,ALT,GENE,EFF,AA) %>%
+      filter(POS != 6696)%>% #these are likely sequencing artifacts
+      filter(POS!= 11074)%>%
+      filter(POS != 15965)%>%
+      filter(POS!= 29051)%>%
+      filter(POS != 187) %>%
+      filter(POS != 1059) %>%
+      filter(POS != 2094) %>%
+      filter(POS != 3037) %>%
+      filter(POS != 3130) %>%
+      filter(POS != 6696) %>%
+      filter(POS != 6990) %>%
+      filter(POS != 8022) %>%
+      filter(POS != 10323) %>%
+      filter(POS != 10741) %>%
+      filter(POS != 11074) %>%
+      filter(POS != 13408) %>%
+      filter(POS != 14786) %>%
+      filter(POS != 19684) %>%
+      filter(POS != 20148) %>%
+      filter(POS != 21137) %>%
+      filter(POS != 24034) %>%
+      filter(POS != 24378) %>%
+      filter(POS != 25563) %>%
+      filter(POS != 26144) %>%
+      filter(POS != 26461) %>%
+      filter(POS != 26681) %>%
+      filter(POS != 28077) %>%
+      filter(POS != 28826) %>%
+      filter(POS != 28854) %>%
+      filter(POS != 29051) %>%
+      filter(POS != 29700)
   }
   return(effuser)
 } #gene annotation files
@@ -107,30 +200,24 @@ names(dirlist) <- names(sleekuser)
 
 #count number of SNPs for each user on each day
 snpcount <- function(user){
-  snplength <-list()
+  snplength <- vector(mode = "list", length(user))
   for (i in seq_along(user)){
-    user[[i]] <- user[[i]] %>%
-      filter(POS != 6696)%>% #these are likely sequencing artifacts
-      filter(POS!= 11074)%>%
-      filter(POS != 15965)%>%
-      filter(POS!= 29051)
     snplength[[i]] <- length(user[[i]]$POS)
   }
   return(snplength)
 }
 snpcounts <- lapply(sleekuser,snpcount)
+snpcounts <- unlist(snpcounts)
 
-snpcounts_dat <- data.frame(matrix(ncol = 20,nrow = 10))
-rownames(snpcounts_dat) <- paste("time point",1:10)
-colnames(snpcounts_dat) <- names(dirlist)
-for(i in seq_along(snpcounts)){
-  for(j in seq_along(snpcounts[[i]])){
-    snpcounts_dat[j,i] <- snpcounts[[i]][[j]]
-  }
-}
+user.info <- import("all_saliva_user_info.xlsx")
+naive.info <- user.info[which(user.info$status == "unvaccinated"),]
+naive.info <- naive.info %>%
+  select(user_id,day_of_infection)
+naive.snpcounts <- bind_cols(naive.info,snpcounts)
+colnames(naive.snpcounts)[3] <- "SNP_count"
 
-save(snpcounts_dat, file = "snpcounts_dat.RData")
-write.csv(snpcounts_dat,"naive_snpcounts.csv")
+save(naive.snpcounts, file = "naive_snpcounts.RData")
+write.csv(naive.snpcounts,"naive_snpcounts.csv")
 
 #pull out SNP positions
 positions <- function(sleekuser){
@@ -147,11 +234,6 @@ allpos <- lapply(sleekuser,positions)
 keepunique <- function(pos){
   splat <- list.rbind(pos)
   unique  <- distinct(splat)
-  unique <- unique %>%
-    filter(POS != 6696)%>%
-    filter(POS != 11074)%>%
-    filter(POS != 15965)%>%
-    filter(POS != 29051)
   return(unique)
 }
 uniqueSNPs <- list()
@@ -162,226 +244,45 @@ for(i in seq_along(allpos)){
 }
 
 #pull out intersecting iSNVs
-var1 <- function(allpos){
-  time1 <- list()
-  for(i in 1:length(allpos)){
-    time1[[i]] <- dplyr::intersect(allpos[[1]],allpos[[i]])
+snp.intersect <- function(allpos){
+  expand <- expand.grid(seq_along(allpos), seq_along(allpos))
+  expand <- expand[,c("Var2","Var1")]
+  expand <- expand[which(expand$Var1 != expand$Var2),]
+  intersecting <- vector(mode = "list", length = length(expand))
+  for(i in seq_along(expand$Var2)){
+    intersecting[[i]] <- dplyr::intersect(allpos[[expand$Var2[[i]]]],
+                                          allpos[[expand$Var1[[i]]]])
   }
-  return(time1)
-}
-var2 <- function(allpos){
-  time2 <- list()
-  for(i in 1:length(allpos)){
-    time2[[i]] <- dplyr::intersect(allpos[[2]],allpos[[i]])
-  }
-  return(time2)
-}
-var3 <- function(allpos){
-  time3 <- list()
-  for(i in 1:length(allpos)){
-    time3[[i]] <- dplyr::intersect(allpos[[3]],allpos[[i]])
-  }
-  return(time3)
-}
-var4 <- function(allpos){
-  time4 <- list()
-  for(i in 1:length(allpos)){
-    time4[[i]] <- dplyr::intersect(allpos[[4]],allpos[[i]])
-  }
-  return(time4)
-}
-var5 <- function(allpos){
-  time5 <- list()
-  for(i in 1:length(allpos)){
-    time5[[i]] <- dplyr::intersect(allpos[[5]],allpos[[i]])
-  }
-  return(time5)
-}
-var6 <- function(allpos){
-  time6 <- list()
-  for(i in 1:length(allpos)){
-    time6[[i]] <- dplyr::intersect(allpos[[6]],allpos[[i]])
-  }
-  return(time6)
-}
-var7 <- function(allpos){
-  time7 <- list()
-  for(i in 1:length(allpos)){
-    time7[[i]] <- dplyr::intersect(allpos[[7]],allpos[[i]])
-  }
-  return(time7)
-}
-var8 <- function(allpos){
-  time8 <- list()
-  for(i in 1:length(allpos)){
-    time8[[i]] <- dplyr::intersect(allpos[[8]],allpos[[i]])
-  }
-  return(time8)
-}
-var9 <- function(allpos){
-  time9 <- list()
-  for(i in 1:length(allpos)){
-    time9[[i]] <- dplyr::intersect(allpos[[9]],allpos[[i]])
-  }
-  return(time9)
-}
-var10 <- function(allpos){
-  time10 <- list()
-  for(i in 1:length(allpos)){
-    time10[[i]] <- dplyr::intersect(allpos[[10]],allpos[[i]])
-  }
-  return(time10)
-}
-
-
-var_432686 <- list("time1"=var1(allpos[[1]]),"time2"=var2(allpos[[1]]),
-                   "time3"=var3(allpos[[1]]),"time4"=var4(allpos[[1]]),
-                   "time5"=var5(allpos[[1]]),"time6"=var6(allpos[[1]]))
-var_432870 <- list("time1"=var1(allpos[[2]]),"time2"=var2(allpos[[2]]),
-                   "time3"=var3(allpos[[2]]),"time4"=var4(allpos[[2]]),
-                   "time5"=var5(allpos[[2]]),"time6"=var6(allpos[[2]]),
-                   "time7"=var7(allpos[[2]]),"time8"=var8(allpos[[2]]),
-                   "time9"=var9(allpos[[2]]))
-var_433227 <- list("time1"=var1(allpos[[3]]),"time2"=var2(allpos[[3]]),
-                   "time3"=var3(allpos[[3]]),"time4"=var4(allpos[[3]]),
-                   "time5"=var5(allpos[[3]]),"time6"=var6(allpos[[3]]),
-                   "time7"=var7(allpos[[3]]))
-var_435786 <- list("time1"=var1(allpos[[4]]),"time2"=var2(allpos[[4]]),
-                   "time3"=var3(allpos[[4]]),"time4"=var4(allpos[[4]]),
-                   "time5"=var5(allpos[[4]]),"time6"=var6(allpos[[4]]))
-var_435805 <- list("time1"=var1(allpos[[5]]),"time2"=var2(allpos[[5]]),
-                   "time3"=var3(allpos[[5]]),"time4"=var4(allpos[[5]]),
-                   "time5"=var5(allpos[[5]]),"time6"=var6(allpos[[5]]),
-                   "time7"=var7(allpos[[5]]),"time8"=var8(allpos[[5]]),
-                   "time9"=var9(allpos[[5]]))
-var_438577 <- list("time1"=var1(allpos[[6]]),"time2"=var2(allpos[[6]]),
-                   "time3"=var3(allpos[[6]]),"time4"=var4(allpos[[6]]),
-                   "time5"=var5(allpos[[6]]),"time6"=var6(allpos[[6]]))
-var_442978 <- list("time1"=var1(allpos[[7]]),"time2"=var2(allpos[[7]]),
-                   "time3"=var3(allpos[[7]]),"time4"=var4(allpos[[7]]),
-                   "time5"=var5(allpos[[7]]))
-var_444332 <- list("time1"=var1(allpos[[8]]),"time2"=var2(allpos[[8]]),
-                   "time3"=var3(allpos[[8]]),"time4"=var4(allpos[[8]]),
-                   "time5"=var5(allpos[[8]]),"time6"=var6(allpos[[8]]),
-                   "time7"=var7(allpos[[8]]),"time8"=var8(allpos[[8]]))
-var_444446 <- list("time1"=var1(allpos[[9]]),"time2"=var2(allpos[[9]]),
-                   "time3"=var3(allpos[[9]]),"time4"=var4(allpos[[9]]),
-                   "time5"=var5(allpos[[9]]),"time6"=var6(allpos[[9]]),
-                   "time7"=var7(allpos[[9]]),"time8"=var8(allpos[[9]]),
-                   "time9"=var9(allpos[[9]]))
-var_444633 <- list("time1"=var1(allpos[[10]]),"time2"=var2(allpos[[10]]),
-                   "time3"=var3(allpos[[10]]),"time4"=var4(allpos[[10]]),
-                   "time5"=var5(allpos[[10]]))
-var_445602 <- list("time1"=var1(allpos[[11]]),"time2"=var2(allpos[[11]]),
-                   "time3"=var3(allpos[[11]]),"time4"=var4(allpos[[11]]),
-                   "time5"=var5(allpos[[11]]),"time6"=var6(allpos[[11]]),
-                   "time7"=var7(allpos[[11]]),"time8"=var8(allpos[[11]]),
-                   "time9"=var9(allpos[[11]]),"time10"=var10(allpos[[11]]))
-var_449650 <- list("time1"=var1(allpos[[12]]),"time2"=var2(allpos[[12]]),
-                   "time3"=var3(allpos[[12]]),"time4"=var4(allpos[[12]]),
-                   "time5"=var5(allpos[[12]]),"time6"=var6(allpos[[12]]),
-                   "time7"=var7(allpos[[12]]),"time8"=var8(allpos[[12]]))
-var_450241 <- list("time1"=var1(allpos[[13]]),"time2"=var2(allpos[[13]]),
-                   "time3"=var3(allpos[[13]]),"time4"=var4(allpos[[13]]),
-                   "time5"=var5(allpos[[13]]),"time6"=var6(allpos[[13]]))
-var_450348 <- list("time1"=var1(allpos[[14]]),"time2"=var2(allpos[[14]]),
-                   "time3"=var3(allpos[[14]]),"time4"=var4(allpos[[14]]),
-                   "time5"=var5(allpos[[14]]),"time6"=var6(allpos[[14]]),
-                   "time7"=var7(allpos[[14]]),"time8"=var8(allpos[[14]]),
-                   "time9"=var9(allpos[[14]]))
-var_451152 <- list("time1"=var1(allpos[[15]]),"time2"=var2(allpos[[15]]),
-                   "time3"=var3(allpos[[15]]),"time4"=var4(allpos[[15]]),
-                   "time5"=var5(allpos[[15]]),"time6"=var6(allpos[[15]]),
-                   "time7"=var7(allpos[[15]]),"time8"=var8(allpos[[15]]))
-var_451709 <- list("time1"=var1(allpos[[16]]),"time2"=var2(allpos[[16]]),
-                   "time3"=var3(allpos[[16]]),"time4"=var4(allpos[[16]]),
-                   "time5"=var5(allpos[[16]]),"time6"=var6(allpos[[16]]),
-                   "time7"=var7(allpos[[16]]),"time8"=var8(allpos[[16]]),
-                   "time9"=var9(allpos[[16]]))
-var_453058 <- list("time1"=var1(allpos[[17]]),"time2"=var2(allpos[[17]]),
-                   "time3"=var3(allpos[[17]]),"time4"=var4(allpos[[17]]),
-                   "time5"=var5(allpos[[17]]),"time6"=var6(allpos[[17]]),
-                   "time7"=var7(allpos[[17]]))
-var_459597 <- list("time1"=var1(allpos[[18]]),"time2"=var2(allpos[[18]]),
-                   "time3"=var3(allpos[[18]]),"time4"=var4(allpos[[18]]),
-                   "time5"=var5(allpos[[18]]),"time6"=var6(allpos[[18]]),
-                   "time7"=var7(allpos[[18]]))
-var_471467 <- list("time1"=var1(allpos[[19]]),"time2"=var2(allpos[[19]]),
-                   "time3"=var3(allpos[[19]]),"time4"=var4(allpos[[19]]),
-                   "time5"=var5(allpos[[19]]),"time6"=var6(allpos[[19]]),
-                   "time7"=var7(allpos[[19]]),"time8"=var8(allpos[[19]]),
-                   "time9"=var9(allpos[[19]]),"time10"=var10(allpos[[19]]))
-var_471588 <- list("time1"=var1(allpos[[20]]),"time2"=var2(allpos[[20]]),
-                   "time3"=var3(allpos[[20]]),"time4"=var4(allpos[[20]]),
-                   "time5"=var5(allpos[[20]]),"time6"=var6(allpos[[20]]),
-                   "time7"=var7(allpos[[20]]),"time8"=var8(allpos[[20]]),
-                   "time9"=var9(allpos[[20]]))
-
-var_list <- list("var_432686"=var_432686,"var_432870"=var_432870,
-                 "var_433227"=var_433227,"var_435786"=var_435786,
-                 "var_435805"=var_435805,"var_438577"=var_438577,
-                 "var_442978"=var_442978,"var_444332"=var_444332,
-                 "var_444446"=var_444446,"var_444633"=var_444633,
-                 "var_445602"=var_445602,"var_449650"=var_449650,
-                 "var_450241"=var_450241,"var_450348"=var_450348,
-                 "var_451152"=var_451152,"var_451709"=var_451709,
-                 "var_453058"=var_453058,"var_459597"=var_459597,
-                 "var_471467"=var_471467,"var_471588"=var_471588)
-
-#remove self-comparison
-selfevict <- function(var){
-  for(i in 1:length(var)){
-    var[[i]][i] <- NA
-  }
-  return(var)
-}
-var_list <- lapply(var_list,selfevict)
-
-#write file for each user to a .csv
-var_filenames <- paste0("naive_intersect/",names(var_list),".csv")
-for(i in seq_along(var_list)){
-  capture.output(var_list[[i]],file=var_filenames[[i]])
-}
-
-#pull out a list of mutations that appear > once for each user (shared iSNVs)
-keepcommon <- function(var){
-  flat <- flatten(var)
-  splat <- na.omit(rlist::list.rbind(flat))
-  common <- distinct(splat)
+  flat <- bind_rows(intersecting)
+  common <- distinct(flat)
   return(common)
 }
-naive_intersecting <- lapply(var_list,keepcommon)
-names(naive_intersecting) <- gsub("var","int",names(var_list))
-naive_intersecting <- lapply(naive_intersecting,arrange,POS)
-save(naive_intersecting,file = "naive_intersecting.RData")
+
+naive.intersecting <- lapply(allpos,snp.intersect)
+naive.intersecting <- lapply(naive.intersecting,arrange,POS)
+
+save(naive.intersecting,file = "naive_intersecting.RData")
 
 #count shared iSNVs present on each day
-shared_lengths <- function(all,intersecting){
-  all_cut <- list()
-  for(i in seq_along(all)){
-    all_cut[[i]] <- all[[i]] %>%
-      filter(POS != 6696) %>%
-      filter(POS != 11074) %>%
-      filter(POS != 15965) %>%
-      filter(POS!= 29051)
-  }
+shared.lengths <- function(all,intersecting){
   subset <- list()
-  subset_lengths <- list()
-  for(i in seq_along(all_cut)){
-    subset[[i]] <- which(all_cut[[i]]$POS %in% intersecting$POS)
-    subset_lengths[[i]] <- length(subset[[i]])
+  subset.lengths <- list()
+  for(i in seq_along(all)){
+    subset[[i]] <- which(all[[i]]$POS %in% intersecting$POS)
+    subset.lengths[[i]] <- length(subset[[i]])
   }
-  subset_lengths <- unlist(subset_lengths)
-  return(subset_lengths)
+  subset.lengths <- unlist(subset.lengths)
+  return(subset.lengths)
 }
-naive_daily_shared <- list()
-for(i in seq_along(naive_intersecting)){
-  naive_daily_shared[[i]] <- shared_lengths(allpos[[i]],naive_intersecting[[i]])
+naive.daily.shared <- list()
+for(i in seq_along(naive.intersecting)){
+  naive.daily.shared[[i]] <- shared.lengths(allpos[[i]],naive.intersecting[[i]])
 }
-save(naive_daily_shared, file = "naive_daily_shared.RData")
+names(naive.daily.shared) <- names(naive.intersecting)
+save(naive.daily.shared, file = "naive_daily_shared.RData")
 
 #create variant tables to track shared iSNV frequencies over time
-varianttable <-function(intersectuser,everythinguser){
+varianttable <- function(intersectuser,everythinguser){
   freq <- list()
   for(i in 2:(length(everythinguser)+1)){
     freq[[1]] <- intersectuser
@@ -421,9 +322,10 @@ varianttable <-function(intersectuser,everythinguser){
   joiner <- joiner[,keepvec]
   return(joiner)
 } 
+
 naive.vartables <- list()
-for(i in seq_along(naive_intersecting)){
-  naive.vartables[[i]] <- varianttable(naive_intersecting[[i]],everythinguser[[i]])
+for(i in seq_along(naive.intersecting)){
+  naive.vartables[[i]] <- varianttable(naive.intersecting[[i]],everythinguser[[i]])
 }
 names(naive.vartables) <- names(sleekuser)
 
@@ -533,21 +435,6 @@ for(i in seq_along(naive.eff)){
   }
 }
 
-#filter out seq artefacts
-for(i in seq_along(naive.eff)){
-  naive.eff[[i]] <- naive.eff[[i]] %>%
-    filter(POS != 6696) %>%
-    filter(POS != 11074) %>%
-    filter(POS != 15965) %>%
-    filter(POS!= 29051)
-}
-
-#write individual annotation csv files for each user
-for(i in seq_along(naive.eff)){
-  filenames <- paste0("naive_annotations/annotated_",names(naive.eff),".csv")
-  write.csv(naive.eff[[i]],filenames[[i]])
-}
-
 #bind annotations for all users into one large table
 naive.annotable <- bind_rows(naive.eff)
 write.csv(naive.annotable,"naive_annotations.csv")
@@ -571,8 +458,6 @@ for(i in seq_along(naive.vartables)){
 for(i in seq_along(naive.vartables)){
   naive.vartables[[i]] <- as.data.frame(t(naive.vartables[[i]]))
   colnames(naive.vartables[[i]]) <- naive.vartables[[i]][1,]
-  naive.vartables[[i]] <- naive.vartables[[i]][-1,]
-  rownames(naive.vartables[[i]]) <- paste0("freq_",1:dim(naive.vartables[[i]])[[1]])
 }
 
 #write csvs for variant frequency tracking tables
@@ -583,53 +468,42 @@ for(i in seq_along(naive.vartables)){
 
 #count the total number of intersecting mutations for each user
 load("naive_intersecting.RData")
-naive_intersecting_cut <- list()
-naive_intersect_lengths <- list()
-for(i in seq_along(naive_intersecting)){
-  naive_intersecting_cut[[i]] <- naive_intersecting[[i]] %>%
-    filter(POS!= 6696)%>%
-    filter(POS!= 11074)%>%
-    filter(POS != 15965)%>%
-    filter(POS!= 29051)
-  naive_intersect_lengths[[i]] <- length(naive_intersecting_cut[[i]]$POS)
-}
-
-#calculate percentage of intersecting (shared) mutants for each user
-naive_intersect_percent <- list()
-for(i in seq_along(uniquecounts)){
-  naive_intersect_percent[[i]] <- naive_intersect_lengths[[i]]/(naive_intersect_lengths[[i]]+uniquecounts[[i]])
+naive.intersect.lengths <- vector(mode = "list", length = length(naive.intersecting))
+for(i in seq_along(naive.intersecting)){
+  naive.intersect.lengths[[i]] <- length(naive.intersecting[[i]]$POS)
 }
 
 #compile all iSNV count data (shared iSNVs, unique iSNVs, and total iSNVs)
-naive_shared <- as.data.frame(matrix(nrow = 20,ncol = 4))
-colnames(naive_shared) <- c("Participant ID", "Shared", "Unique", "Total")
-naive_shared[,1] <- names(dirlist)
-naive_shared[,2] <- as.numeric(unlist(naive_intersect_lengths))
-naive_shared[,3] <- as.numeric(unlist(uniquecounts))
-naive_shared[,4] <- naive_shared[,2] + naive_shared[,3]
-naive_shared$`Participant ID` <- as.character(naive_shared$`Participant ID`)
-save(naive_shared, file = "naive_shared.RData")
+naive.shared <- as.data.frame(matrix(nrow = 20,ncol = 4))
+colnames(naive.shared) <- c("Participant ID", "Shared", "Unique", "Total")
+naive.shared[,1] <- names(dirlist)
+naive.shared[,2] <- as.numeric(unlist(naive.intersect.lengths))
+naive.shared[,3] <- as.numeric(unlist(uniquecounts))
+naive.shared[,4] <- naive.shared[,2] + naive.shared[,3]
+naive.shared$`Participant ID` <- as.character(naive.shared$`Participant ID`)
+naive.shared <- as_tibble(naive.shared)
+save(naive.shared, file = "naive_shared.RData")
 
-#plot daily iSNV counts (FIG 2A)
-load("snpcounts_dat.Rdata")
-naive_count_gather <- snpcounts_dat%>%
-  mutate("day"=1:10)%>%
-  gather(key = "Participant ID",value="SNP_count",-day)
+#plot daily iSNV counts
+load("naive_snpcounts.RData")
+load("naive_shared.RData")
+naive.snpcounts <- as_tibble(naive.snpcounts)
+naive.snpcounts$user_id <- as.character(naive.snpcounts$user_id)
 
 twenty.palette <-c("#9D6A90","#94719A","#8978A2","#7C7FA9","#6D86AD","#5D8DAF",
                    "#4C93AF","#3C99AC","#2E9EA7","#26A39F","#2AA796","#36AB8C",
                    "#46AE81","#58B075","#6AB269","#7CB25E","#8FB355","#A2B24D",
                    "#B5B148","#C8AF46")
 
-ggplot(data=naive_count_gather,aes(x=`Participant ID`,y=SNP_count,fill = `Participant ID`))+
-  geom_dotplot(binaxis = "y", binwidth = .08, stackdir = "center", color = NA)+ #binwidth .08
+ggplot(data=naive.snpcounts,aes(x=user_id,y=SNP_count,fill = user_id))+
+  geom_dotplot(binaxis = "y", binwidth = .08,stackdir = "center", color = NA)+
   xlab("Participant ID")+
   ylab("iSNV Count")+
   ggtitle("Unvaccinated")+
   scale_y_log10()+
-  geom_col(data = naive_shared,aes(x=`Participant ID`,y=Shared), 
+  geom_col(data = naive.shared,aes(x=`Participant ID`,y=Shared), 
            fill=NA,color = "black")+
-  geom_col(data=naive_shared,aes(x=`Participant ID`,y=Total),
+  geom_col(data=naive.shared,aes(x=`Participant ID`,y=Total),
            fill=NA,color="grey40")+
   scale_fill_manual(values = twenty.palette)+
   theme_bw()+
@@ -640,8 +514,9 @@ ggplot(data=naive_count_gather,aes(x=`Participant ID`,y=SNP_count,fill = `Partic
                                    hjust = 1),
         axis.title.x = element_text(margin = margin(t=10)),
         plot.title = element_text(size = 22))
-ggsave("figs/naive_SNPs_shared_total_box.png")
-save(naive_count_gather,file="naive_count_gather.Rdata")
+
+ggsave("figs/naive_SNPcounts.png")
+
 
 
 

@@ -1,10 +1,11 @@
 library(tidyverse)
 library(rio)
 library(rlist)
+library(gdata)
 library(gtools)
 library(here)
 
-dirlist_vax <- list.dirs("vaccinated_output_tables")[-c(1,10)]
+dirlist.vax <- list.dirs("vaccinated_output_tables")[-1]
 
 #pare down data to necessary elements
 sleek <- function(dir){
@@ -20,11 +21,42 @@ sleek <- function(dir){
     sleekuser[[i]] <- user[[i]] %>%
       filter(ALT_FREQ>=.03,ALT_FREQ<=.97)%>%
       filter(ALT_DP + REF_DP >=1000)%>%
+      filter(POS != 6696)%>% #these are likely sequencing artifacts
+      filter(POS!= 11074)%>%
+      filter(POS != 15965)%>%
+      filter(POS!= 29051)%>%
+      filter(POS != 187) %>%
+      filter(POS != 1059) %>%
+      filter(POS != 2094) %>%
+      filter(POS != 3037) %>%
+      filter(POS != 3130) %>%
+      filter(POS != 6696) %>%
+      filter(POS != 6990) %>%
+      filter(POS != 8022) %>%
+      filter(POS != 10323) %>%
+      filter(POS != 10741) %>%
+      filter(POS != 11074) %>%
+      filter(POS != 13408) %>%
+      filter(POS != 14786) %>%
+      filter(POS != 19684) %>%
+      filter(POS != 20148) %>%
+      filter(POS != 21137) %>%
+      filter(POS != 24034) %>%
+      filter(POS != 24378) %>%
+      filter(POS != 25563) %>%
+      filter(POS != 26144) %>%
+      filter(POS != 26461) %>%
+      filter(POS != 26681) %>%
+      filter(POS != 28077) %>%
+      filter(POS != 28826) %>%
+      filter(POS != 28854) %>%
+      filter(POS != 29051) %>%
+      filter(POS != 29700) %>%
       select(POS,REF,ALT,ALT_DP,REF_DP,ALT_FREQ)%>%
       distinct()
   }
   return(sleekuser)
-} #POS,REF,ALT,ALT_DP,REF_DP,ALT_FREQ
+} #POS,REF,ALT,ALT_DP,REF_DP,ALT_FREQ + data thresholds
 everything <- function(dir){
   files <- list.files(dir,pattern = "ivar")
   files <- gtools::mixedsort(sort(files))
@@ -37,6 +69,37 @@ everything <- function(dir){
   for(i in 1:length(user)){
     everythinguser[[i]] <- user[[i]] %>%
       select(POS,REF,ALT,ALT_FREQ,TOTAL_DP)%>%
+      filter(POS != 6696)%>% #these are likely sequencing artifacts
+      filter(POS!= 11074)%>%
+      filter(POS != 15965)%>%
+      filter(POS!= 29051)%>%
+      filter(POS != 187) %>%
+      filter(POS != 1059) %>%
+      filter(POS != 2094) %>%
+      filter(POS != 3037) %>%
+      filter(POS != 3130) %>%
+      filter(POS != 6696) %>%
+      filter(POS != 6990) %>%
+      filter(POS != 8022) %>%
+      filter(POS != 10323) %>%
+      filter(POS != 10741) %>%
+      filter(POS != 11074) %>%
+      filter(POS != 13408) %>%
+      filter(POS != 14786) %>%
+      filter(POS != 19684) %>%
+      filter(POS != 20148) %>%
+      filter(POS != 21137) %>%
+      filter(POS != 24034) %>%
+      filter(POS != 24378) %>%
+      filter(POS != 25563) %>%
+      filter(POS != 26144) %>%
+      filter(POS != 26461) %>%
+      filter(POS != 26681) %>%
+      filter(POS != 28077) %>%
+      filter(POS != 28826) %>%
+      filter(POS != 28854) %>%
+      filter(POS != 29051) %>%
+      filter(POS != 29700) %>%
       distinct()
   }
   return(everythinguser)
@@ -87,225 +150,143 @@ eff <- function(dir){
   
   for(i in seq_along(effuser)){
     effuser[[i]] <- effuser[[i]] %>%
-      select(POS,REF,ALT,GENE,EFF,AA)
-  }
-  return(effuser)
-}  #gene annotation files
-
-sleekuser_vax <- lapply(dirlist_vax,sleek)
-names(sleekuser_vax) <- c("461913","471876","475670","475951","481242","481672",
-                          "482828","484249","486422","487250","487297",
-                          "487941")
-names(dirlist_vax) <- names(sleekuser_vax)
-everythinguser_vax <- lapply(dirlist_vax,everything)
-names(everythinguser_vax) <- names(sleekuser_vax)
-effuser_vax <- lapply(dirlist_vax,eff)
-names(effuser_vax) <- names(sleekuser_vax)
-
-#count snps
-snpcount <- function(user){
-  snplength <-list()
-  for (i in seq_along(user)){
-    user[[i]] <- user[[i]] %>%
+      select(POS,REF,ALT,GENE,EFF,AA) %>%
       filter(POS != 6696)%>% #these are likely sequencing artifacts
       filter(POS!= 11074)%>%
       filter(POS != 15965)%>%
-      filter(POS!= 29051)
+      filter(POS!= 29051)%>%
+      filter(POS != 187) %>%
+      filter(POS != 1059) %>%
+      filter(POS != 2094) %>%
+      filter(POS != 3037) %>%
+      filter(POS != 3130) %>%
+      filter(POS != 6696) %>%
+      filter(POS != 6990) %>%
+      filter(POS != 8022) %>%
+      filter(POS != 10323) %>%
+      filter(POS != 10741) %>%
+      filter(POS != 11074) %>%
+      filter(POS != 13408) %>%
+      filter(POS != 14786) %>%
+      filter(POS != 19684) %>%
+      filter(POS != 20148) %>%
+      filter(POS != 21137) %>%
+      filter(POS != 24034) %>%
+      filter(POS != 24378) %>%
+      filter(POS != 25563) %>%
+      filter(POS != 26144) %>%
+      filter(POS != 26461) %>%
+      filter(POS != 26681) %>%
+      filter(POS != 28077) %>%
+      filter(POS != 28826) %>%
+      filter(POS != 28854) %>%
+      filter(POS != 29051) %>%
+      filter(POS != 29700)
+  }
+  return(effuser)
+} #gene annotation files
+
+sleekuser.vax <- lapply(dirlist.vax,sleek)
+everythinguser.vax <- lapply(dirlist.vax,everything)
+effuser.vax <- lapply(dirlist.vax,eff)
+
+names(sleekuser.vax) <- c("461913","471876","475670","475951","481242","481672",
+                      "482828","484249","486422","487250","487297",
+                      "487941")
+names(everythinguser.vax) <- names(sleekuser.vax)
+names(effuser.vax) <- names(sleekuser.vax)
+names(dirlist.vax) <- names(sleekuser.vax)
+
+#count number of SNPs for each user on each day
+snpcount <- function(user){
+  snplength <- vector(mode = "list", length(user))
+  for (i in seq_along(user)){
     snplength[[i]] <- length(user[[i]]$POS)
   }
   return(snplength)
 }
-snpcounts_vax <- lapply(sleekuser_vax,snpcount)
+snpcounts.vax <- lapply(sleekuser.vax,snpcount)
+snpcounts.vax <- unlist(snpcounts.vax)
 
-snpcounts_dat_vax <- data.frame(matrix(ncol = 12,nrow = 8))
-rownames(snpcounts_dat_vax) <- paste("time point",1:8)
-colnames(snpcounts_dat_vax) <- names(dirlist_vax)
-for(i in seq_along(snpcounts_vax)){
-  for(j in seq_along(snpcounts_vax[[i]])){
-    snpcounts_dat_vax[j,i] <- snpcounts_vax[[i]][[j]]
-  }
-}
+user.info <- import("all_saliva_user_info.xlsx")
+vax.info <- user.info[which(user.info$status == "immune"),]
+vax.info <- vax.info %>%
+  select(user_id,day_of_infection)
+snpcounts.vax <- bind_cols(vax.info,snpcounts.vax)
+colnames(snpcounts.vax)[3] <- "SNP_count"
 
-save(snpcounts_dat_vax, file = "snpcounts_dat_vax.RData")
-write.csv(snpcounts_dat_vax,"vaccinated_snpcounts.csv")
+save(snpcounts.vax, file = "vax_snpcounts.RData")
+write.csv(snpcounts.vax,"vax_snpcounts.csv")
 
 #pull out SNP positions
 positions <- function(sleekuser){
   allpos <- list()
-  for (i in 1:length(sleekuser)){
+  for (i in seq_along(sleekuser)){
     allpos[[i]] <- sleekuser[[i]] %>%
       select(POS,REF,ALT)
   }
   return(allpos)
 }
-allpos_vax <- lapply(sleekuser_vax,positions)
-names(allpos_vax) <- names(sleekuser_vax)
+allpos.vax <- lapply(sleekuser.vax,positions)
 
-#pull out SNPs that do NOT appear more than once in a single user
+#pull out variants that do NOT appear more than once within users
 keepunique <- function(pos){
   splat <- list.rbind(pos)
   unique  <- distinct(splat)
-  unique <- unique %>%
-    filter(POS != 6696)%>%
-    filter(POS != 11074)%>%
-    filter(POS != 15965)%>%
-    filter(POS != 29051)
   return(unique)
 }
-uniqueSNPs_vax <- list()
-uniquecounts_vax <- list()
-for(i in 1:length(allpos_vax)){
-  uniqueSNPs_vax[[i]] <- keepunique(allpos_vax[[i]])
-  uniquecounts_vax[[i]] <- length(uniqueSNPs_vax[[i]]$POS)
+uniqueSNPs.vax <- list()
+uniquecounts.vax <- list()
+for(i in seq_along(allpos.vax)){
+  uniqueSNPs.vax[[i]] <- keepunique(allpos.vax[[i]])
+  uniquecounts.vax[[i]] <- length(uniqueSNPs.vax[[i]]$POS)
 }
-names(uniquecounts_vax) <- names(sleekuser_vax)
-uniquecounts_vax <- uniquecounts_vax[-c(1,6,12)] #take out users w/ only 1 timept
 
 #pull out intersecting iSNVs
-var1 <- function(allpos){
-  time1 <- list()
-  for(i in 1:length(allpos)){
-    time1[[i]] <- dplyr::intersect(allpos[[1]],allpos[[i]])
+snp.intersect <- function(allpos){
+  expand <- expand.grid(seq_along(allpos), seq_along(allpos))
+  expand <- expand[,c("Var2","Var1")]
+  expand <- expand[which(expand$Var1 != expand$Var2),]
+  intersecting <- vector(mode = "list", length = length(expand))
+  for(i in seq_along(expand$Var2)){
+    intersecting[[i]] <- dplyr::intersect(allpos[[expand$Var2[[i]]]],
+                                          allpos[[expand$Var1[[i]]]])
   }
-  return(time1)
-}
-var2 <- function(allpos){
-  time2 <- list()
-  for(i in 1:length(allpos)){
-    time2[[i]] <- dplyr::intersect(allpos[[2]],allpos[[i]])
-  }
-  return(time2)
-}
-var3 <- function(allpos){
-  time3 <- list()
-  for(i in 1:length(allpos)){
-    time3[[i]] <- dplyr::intersect(allpos[[3]],allpos[[i]])
-  }
-  return(time3)
-}
-var4 <- function(allpos){
-  time4 <- list()
-  for(i in 1:length(allpos)){
-    time4[[i]] <- dplyr::intersect(allpos[[4]],allpos[[i]])
-  }
-  return(time4)
-}
-var5 <- function(allpos){
-  time5 <- list()
-  for(i in 1:length(allpos)){
-    time5[[i]] <- dplyr::intersect(allpos[[5]],allpos[[i]])
-  }
-  return(time5)
-}
-var6 <- function(allpos){
-  time6 <- list()
-  for(i in 1:length(allpos)){
-    time6[[i]] <- dplyr::intersect(allpos[[6]],allpos[[i]])
-  }
-  return(time6)
-}
-var7 <- function(allpos){
-  time7 <- list()
-  for(i in 1:length(allpos)){
-    time7[[i]] <- dplyr::intersect(allpos[[7]],allpos[[i]])
-  }
-  return(time7)
-}
-var8 <- function(allpos){
-  time8 <- list()
-  for(i in 1:length(allpos)){
-    time8[[i]] <- dplyr::intersect(allpos[[8]],allpos[[i]])
-  }
-  return(time8)
-}
-
-#only includes users with more than one time point
-var_471876 <- list("time1"=var1(allpos_vax[[2]]),"time2"=var2(allpos_vax[[2]]),
-                   "time3"=var3(allpos_vax[[2]]),"time4"=var4(allpos_vax[[2]]),
-                   "time5"=var5(allpos_vax[[2]]),"time6"=var6(allpos_vax[[2]]),
-                   "time7"=var7(allpos_vax[[2]]),"time8"=var8(allpos_vax[[2]]))
-var_475670 <- list("time1"=var1(allpos_vax[[3]]),"time2"=var2(allpos_vax[[3]]),
-                   "time3"=var3(allpos_vax[[3]]),"time4"=var4(allpos_vax[[3]]),
-                   "time5"=var5(allpos_vax[[3]]),"time6"=var6(allpos_vax[[3]]),
-                   "time7"=var7(allpos_vax[[3]]))
-var_475951 <- list("time1"=var1(allpos_vax[[4]]),"time2"=var2(allpos_vax[[4]]),
-                   "time3"=var3(allpos_vax[[4]]),"time4"=var4(allpos_vax[[4]]))
-var_481242 <- list("time1"=var1(allpos_vax[[5]]),"time2"=var2(allpos_vax[[5]]),
-                   "time3"=var3(allpos_vax[[5]]),"time4"=var4(allpos_vax[[5]]),
-                   "time5"=var5(allpos_vax[[5]]),"time6"=var6(allpos_vax[[5]]),
-                   "time7"=var7(allpos_vax[[5]]))
-var_482828 <- list("time1"=var1(allpos_vax[[7]]),"time2"=var2(allpos_vax[[7]]),
-                   "time3"=var3(allpos_vax[[7]]),"time4"=var4(allpos_vax[[7]]))
-var_484249 <- list("time1"=var1(allpos_vax[[8]]),"time2"=var2(allpos_vax[[8]]))
-var_486422 <- list("time1"=var1(allpos_vax[[9]]),"time2"=var2(allpos_vax[[9]]),
-                   "time3"=var3(allpos_vax[[9]]))
-var_487250 <- list("time1"=var1(allpos_vax[[10]]),"time2"=var2(allpos_vax[[10]]),
-                   "time3"=var3(allpos_vax[[10]]),"time4"=var4(allpos_vax[[10]]))
-var_487297 <- list("time1"=var1(allpos_vax[[11]]),"time2"=var2(allpos_vax[[11]]),
-                   "time3"=var3(allpos_vax[[11]]))
-var_list_vax <- list("var_471876"=var_471876,"var_475670"=var_475670,
-                 "var_475951"=var_475951,"var_481242"=var_481242,
-                 "var_482828"=var_482828,"var_484249"=var_484249,
-                 "var_486422"=var_486422,"var_487250"=var_487250,
-                 "var_487297"=var_487297)
-            
-#remove self-comparison
-selfevict <- function(var){
-  for(i in 1:length(var)){
-    var[[i]][i] <- NA
-  }
-  return(var)
-}
-for(i in 1:length(var_list_vax)){
-  var_list_vax[[i]] <- selfevict(var_list_vax[[i]])
-}
-
-#write file for each user to a .csv
-var_filenames_vax <- paste0("vaccinated_intersect/",names(var_list_vax),".csv")
-for(i in 1:length(var_list_vax)){
-  capture.output(var_list_vax[[i]],file=var_filenames_vax[[i]])
-}
-
-#pull out a list of mutations that appear > once for each user (shared iSNVs)
-keepcommon <- function(var){
-  flat <- flatten(var)
-  splat <- na.omit(list.rbind(flat))
-  common <- distinct(splat)
+  flat <- bind_rows(intersecting)
+  common <- distinct(flat)
   return(common)
 }
-vax_intersecting <- lapply(var_list_vax,keepcommon)
-names(vax_intersecting) <- gsub("var","int",names(var_list_vax))
-vax_intersecting <- lapply(vax_intersecting,arrange,POS)
-save(vax_intersecting,file = "vax_intersecting.RData")
+
+vax.intersecting <- lapply(allpos.vax,snp.intersect)
+for(i in seq_along(vax.intersecting)){
+  if(length(vax.intersecting[[i]]) > 0){
+    vax.intersecting[[i]] <- vax.intersecting[[i]] %>%
+      arrange(POS)
+  }
+}
+
+save(vax.intersecting,file = "vax_intersecting.RData")
 
 #count shared iSNVs present on each day
-shared_lengths <- function(all,intersecting){
-  all_cut <- list()
-  for(i in seq_along(all)){
-    all_cut[[i]] <- all[[i]] %>%
-      filter(POS != 6696) %>%
-      filter(POS != 11074) %>%
-      filter(POS != 15965) %>%
-      filter(POS!= 29051)
-  }
+shared.lengths <- function(all,intersecting){
   subset <- list()
-  subset_lengths <- list()
-  for(i in seq_along(all_cut)){
-    subset[[i]] <- which(all_cut[[i]]$POS %in% intersecting$POS)
-    subset_lengths[[i]] <- length(subset[[i]])
+  subset.lengths <- list()
+  for(i in seq_along(all)){
+    subset[[i]] <- which(all[[i]]$POS %in% intersecting$POS)
+    subset.lengths[[i]] <- length(subset[[i]])
   }
-  subset_lengths <- unlist(subset_lengths)
-  return(subset_lengths)
+  subset.lengths <- unlist(subset.lengths)
+  return(subset.lengths)
 }
-allpos_vax_cut <- allpos_vax[-c(1,6,12)]
-vax_daily_shared <- list()
-for(i in seq_along(vax_intersecting)){
-  vax_daily_shared[[i]] <- shared_lengths(allpos_vax_cut[[i]],vax_intersecting[[i]])
+vax.daily.shared <- list()
+for(i in seq_along(vax.intersecting)){
+  vax.daily.shared[[i]] <- shared.lengths(allpos.vax[[i]],vax.intersecting[[i]])
 }
-save(vax_daily_shared, file = "vax_daily_shared.RData")
+names(vax.daily.shared) <- names(vax.intersecting)
+save(vax.daily.shared, file = "vax_daily_shared.RData")
 
 #create variant tables to track shared iSNV frequencies over time
-varianttable <-function(intersectuser,everythinguser){
+varianttable <- function(intersectuser,everythinguser){
   freq <- list()
   for(i in 2:(length(everythinguser)+1)){
     freq[[1]] <- intersectuser
@@ -313,8 +294,8 @@ varianttable <-function(intersectuser,everythinguser){
   }
   joiner <- freq %>%
     purrr::reduce(left_join, by=c("POS","REF","ALT"))
-  
   numvec <- 1:((dim(joiner)[[2]]-3) - ((dim(joiner)[[2]]-3)/2))
+  
   numrep <- list()
   for(i in 1:length(numvec)){
     numrep[[i]]<- rep(numvec[[i]],2)
@@ -345,12 +326,17 @@ varianttable <-function(intersectuser,everythinguser){
   joiner <- joiner[,keepvec]
   return(joiner)
 } 
-everythinguser_vax_cut <- everythinguser_vax[-c(1,6,12)]
+
+#remove users with no shared iSNVs
+vax.intersecting <- vax.intersecting[-c(1,4,6,8,9,11,12)]
+everythinguser.vax <- everythinguser.vax[-c(1,4,6,8,9,11,12)]
+effuser.vax <- effuser.vax[-c(1,4,6,8,9,11,12)]
+
 vax.vartables <- list()
-for(i in 1:length(vax_intersecting)){
-  vax.vartables[[i]] <- varianttable(vax_intersecting[[i]],everythinguser_vax_cut[[i]])
+for(i in seq_along(vax.intersecting)){
+  vax.vartables[[i]] <- varianttable(vax.intersecting[[i]],everythinguser.vax[[i]])
 }
-names(vax.vartables) <- names(vax_intersecting)
+names(vax.vartables) <- names(everythinguser.vax)
 
 #replace NA with 0.01 (for plotting on log scale)
 NA_01 <- function(vartable){
@@ -363,13 +349,11 @@ NA_01 <- function(vartable){
   }
   return(vartable)
 }
-for(i in 1:length(vax.vartables)){
-  vax.vartables[[i]] <- NA_01(vax.vartables[[i]])
-}
+vax.vartables <- lapply(vax.vartables,NA_01)
 
 #reformat SNP notation with no +/-'s (eg. REF = C, ALT= +T --> REF = C, ALT = CT)
-for(i in 1:length(vax.vartables)){
-  for(j in 1:length(vax.vartables[[i]]$ALT)){
+for(i in seq_along(vax.vartables)){
+  for(j in seq_along(vax.vartables[[i]]$ALT)){
     if(substr(vax.vartables[[i]]$ALT[[j]],0,1)=="+"){
       vax.vartables[[i]]$ALT[[j]] <- paste0(vax.vartables[[i]]$REF[[j]], 
                                               substr(vax.vartables[[i]]$ALT[[j]],2,nchar(vax.vartables[[i]]$ALT[[j]])))
@@ -404,32 +388,29 @@ annotable <-function(vartables,effuser){
   }
   return(annotable)
 } 
-
-effuser_vax_cut <- effuser_vax[-c(1,6,12)] #remove users w/ 1 timept
 vax.eff <- list()
-for(i in 1:length(vax.vartables)){
-  vax.eff[[i]] <- annotable(vax.vartables[[i]],effuser_vax_cut[[i]])
+for(i in seq_along(vax.vartables)){
+  vax.eff[[i]] <- annotable(vax.vartables[[i]],effuser.vax[[i]])
 }
+names(vax.eff) <- names(effuser.vax)
 
-#annotate UTR as 5'/3'/general UTR
-for(i in 1:length(vax.eff)){
-  for(j in 1:length(vax.eff[[i]]$POS)){
+#annotate UTR as 5' or 3' UTR
+for(i in seq_along(vax.eff)){
+  for(j in seq_along(vax.eff[[i]]$POS)){
     if(vax.eff[[i]]$POS[[j]] <= 265){
       vax.eff[[i]]$GENE[[j]] <- "5'UTR"
     }
-    if((vax.eff[[i]]$POS[[j]]>28259) &&
-       (vax.eff[[i]]$POS[[j]]<28274)){
-      vax.eff[[i]]$GENE[[j]] <- "UTR"
-    }
     if(vax.eff[[i]]$POS[[j]] >= 29675){
       vax.eff[[i]]$GENE[[j]] <- "3'UTR"
+    }
+    if(vax.eff[[i]]$POS[[j]] >= 28260 && vax.eff[[i]]$POS[[j]] < 28274){
+      vax.eff[[i]]$GENE[[j]] <- "UTR"
     }
   }
 }
 
 #add columns for ID and reformat to REF-POS-ALT SNP notation
-names(vax.eff) <- gsub("int_","",names(vax.vartables))
-for(i in 1:length(vax.eff)){
+for(i in seq_along(vax.eff)){
   vax.eff[[i]] <- vax.eff[[i]] %>%
     mutate("ID" = names(vax.eff)[[i]]) %>%
     relocate(ID,.before = POS) %>%
@@ -439,11 +420,11 @@ for(i in 1:length(vax.eff)){
 }
 
 #reformat EFF column to read synonymous/nonsynonymous/utr
-for(i in 1:length(vax.eff)){
-  for(j in 1:length(vax.eff[[i]]$GENE)){
+for(i in seq_along(vax.eff)){
+  for(j in seq_along(vax.eff[[i]]$GENE)){
     if((vax.eff[[i]]$GENE[[j]] == "5'UTR") |
        (vax.eff[[i]]$GENE[[j]] == "3'UTR") |
-       (vax.eff[[i]]$GENE[[j]] == "UTR")){
+       (vax.eff[[i]]$GENE[[j]] == "UTR")) {
       vax.eff[[i]]$EFF[[j]] <- "UTR"
     }
     if(vax.eff[[i]]$EFF[[j]] == "synonymous_variant"){
@@ -451,8 +432,8 @@ for(i in 1:length(vax.eff)){
     }
   }
 }
-for(i in 1:length(vax.eff)){
-  for(j in 1:length(vax.eff[[i]]$EFF)){
+for(i in seq_along(vax.eff)){
+  for(j in seq_along(vax.eff[[i]]$EFF)){
     if((vax.eff[[i]]$EFF[[j]] != "UTR") &&
        (vax.eff[[i]]$EFF[[j]] != "synonymous")){
       vax.eff[[i]]$EFF[[j]] <- "nonsynonymous"
@@ -461,39 +442,25 @@ for(i in 1:length(vax.eff)){
 }
 
 #get rid of extraneous punctuation in AA column
-for(i in 1:length(vax.eff)){
-  for(j in 1:length(vax.eff[[i]]$AA)){
+for(i in seq_along(vax.eff)){
+  for(j in seq_along(vax.eff[[i]]$AA)){
     vax.eff[[i]]$AA[[j]] <- strsplit(vax.eff[[i]]$AA[[j]],",")[[1]][1]
   }
 }
 
-#filter out seq artefacts
-for(i in seq_along(vax.eff)){
-  vax.eff[[i]] <- vax.eff[[i]] %>%
-    filter(POS != 6696) %>%
-    filter(POS != 11074) %>%
-    filter(POS != 15965)%>%
-    filter(POS!= 29051)
-}
-
-#write individual annotation csv files for each user
-for(i in 1:length(vax.eff)){
-  filenames <- paste0("vaccinated_annotations/annotated_",names(vax.eff),".csv")
-  write.csv(vax.eff[[i]],filenames[[i]])
-}
-
 #bind annotations for all users into one large table
 vax.annotable <- bind_rows(vax.eff)
-write.csv(vax.annotable,"vaccinated_annotations.csv")
+write.csv(vax.annotable,"vax_annotations.csv")
 
 #reformat variant plots to REF-POS-ALT SNP notation
-for(i in 1:length(vax.vartables)){
-  for(j in 1:length(vax.vartables[[i]]$POS)){
+for(i in seq_along(vax.vartables)){
+  for(j in seq_along(vax.vartables[[i]]$POS)){
     vax.vartables[[i]]$POS[[j]] <- paste0(vax.vartables[[i]]$REF[[j]], 
                                             vax.vartables[[i]]$POS[[j]], vax.vartables[[i]]$ALT[[j]])
   }
 }
-for(i in 1:length(vax.vartables)){
+
+for(i in seq_along(vax.vartables)){
   vax.vartables[[i]] <- vax.vartables[[i]] %>%
     rename("SNP"=POS)%>%
     select(!REF)%>%
@@ -501,70 +468,55 @@ for(i in 1:length(vax.vartables)){
 }
 
 #transpose data (makes things easier to plot)
-for(i in 1:length(vax.vartables)){
+for(i in seq_along(vax.vartables)){
   vax.vartables[[i]] <- as.data.frame(t(vax.vartables[[i]]))
   colnames(vax.vartables[[i]]) <- vax.vartables[[i]][1,]
-  vax.vartables[[i]] <- vax.vartables[[i]][-1,]
-  rownames(vax.vartables[[i]]) <- paste0("freq_",1:dim(vax.vartables[[i]])[[1]])
 }
 
 #write csvs for variant frequency tracking tables
-for(i in 1:length(vax.vartables)){
-  filenames <- paste0("vaccinated_variant_tables/user_",
-                      gsub("int_","",names(vax.vartables)),
-                      ".csv")
+for(i in seq_along(vax.vartables)){
+  filenames <- paste0("vaccinated_variant_tables/user_",names(vax.vartables),".csv")
   write.csv(vax.vartables[[i]],filenames[[i]])
 }
 
-#count the total number of intersecting (shared) mutations for each user
+#count the total number of intersecting mutations for each user
 load("vax_intersecting.RData")
-vax_intersecting_cut <- list()
-vax_intersect_lengths <- list()
-for(i in 1:length(vax_intersecting)){
-  vax_intersecting_cut[[i]] <- vax_intersecting[[i]] %>%
-    filter(POS!= 6696)%>%
-    filter(POS!= 11074)%>%
-    filter(POS != 15965)%>%
-    filter(POS!= 29051)
-  vax_intersect_lengths[[i]] <- length(vax_intersecting_cut[[i]]$POS)
-}
-
-#calculate percentage of intersecting (shared) mutants for each user
-vax_intersect_percent <- list()
-for(i in 1:length(uniquecounts_vax)){
-  vax_intersect_percent[[i]] <- vax_intersect_lengths[[i]]/(vax_intersect_lengths[[i]]+uniquecounts_vax[[i]])
+vax.intersect.lengths <- vector(mode = "list", length = length(vax.intersecting))
+for(i in seq_along(vax.intersecting)){
+  vax.intersect.lengths[[i]] <- length(vax.intersecting[[i]]$POS)
 }
 
 #compile all iSNV count data (shared iSNVs, unique iSNVs, and total iSNVs)
-vaccinated_shared <- as.data.frame(matrix(nrow = 9,ncol = 4))
-colnames(vaccinated_shared) <- c("Participant ID", "Shared", "Unique", "Total")
-vaccinated_shared[,1] <- c("471876","475670","475951","481242","482828",
-                                 "484249","486422","487250","487297")
-vaccinated_shared[,2] <- as.numeric(unlist(vax_intersect_lengths))
-vaccinated_shared[,3] <- as.numeric(unlist(uniquecounts_vax))
-vaccinated_shared[,4] <- vaccinated_shared[,2] + vaccinated_shared[,3]
-vaccinated_shared$`Participant ID` <- as.character(vaccinated_shared$`Participant ID`)
-save(vaccinated_shared,file = "vaccinated_shared.RData")
+vax.shared <- as.data.frame(matrix(nrow = 12,ncol = 4))
+colnames(vax.shared) <- c("Participant ID", "Shared", "Unique", "Total")
+vax.shared[,1] <- names(dirlist.vax)
+vax.shared[,2] <- as.numeric(unlist(vax.intersect.lengths))
+vax.shared[,3] <- as.numeric(unlist(uniquecounts.vax))
+vax.shared[,4] <- vax.shared[,2] + vax.shared[,3]
+vax.shared$`Participant ID` <- as.character(vax.shared$`Participant ID`)
+vax.shared <- as_tibble(vax.shared)
+save(vax.shared, file = "vax_shared.RData")
 
-#plot daily iSNV counts (FIG 2B)
-load("snpcounts_dat_vax.RData")
-vax_count_gather <- snpcounts_dat_vax%>%
-  mutate("day"=1:8)%>%
-  gather(key = "Participant ID",value="SNP_count",-day)
+#plot daily iSNV counts
+load("vax_snpcounts.RData")
+load("vax_shared.RData")
+snpcounts.vax <- as_tibble(snpcounts.vax)
+snpcounts.vax$user_id <- as.character(snpcounts.vax$user_id)
 
-twelve.palette <- c("#9D6A90","#8E759F","#7981AA","#618CAF","#4696AE","#2E9EA7",
-                    "#27A59B","#37AB8B","#52AF79","#6FB267","#8CB356","#AAB24A",
-                    "#C8AF46")
+twelve.palette <- c("#9D6A90","#8E759F","#7981AA","#618CAF","#4696AE","#2E9EA7","#27A59B",
+                    "#37AB8B","#52AF79","#6FB267","#8CB356","#AAB24A","#C8AF46")
 
-ggplot(data=vax_count_gather,aes(x=`Participant ID`,y=SNP_count,fill = `Participant ID`))+
-  geom_dotplot(binaxis = "y",binwidth = .12,stackdir = "center",color=NA)+
+vax.shared[c(1,6,12),] <- NA #only 1 datapoint
+
+ggplot(data=snpcounts.vax,aes(x=user_id,y=SNP_count,fill = user_id))+
+  geom_dotplot(binaxis = "y", binwidth = .08,stackdir = "center", color = NA)+
   xlab("Participant ID")+
   ylab("iSNV Count")+
   ggtitle("Immune")+
-  scale_y_log10(limits = c(1,1000))+
-  geom_col(data = vaccinated_shared,aes(x=`Participant ID`,y=Shared), 
+  scale_y_log10()+
+  geom_col(data = vax.shared,aes(x=`Participant ID`,y=Shared), 
            fill=NA,color = "black")+
-  geom_col(data=vaccinated_shared,aes(x=`Participant ID`,y=Total),
+  geom_col(data=vax.shared,aes(x=`Participant ID`,y=Total),
            fill=NA,color="grey40")+
   scale_fill_manual(values = twelve.palette)+
   theme_bw()+
@@ -575,7 +527,5 @@ ggplot(data=vax_count_gather,aes(x=`Participant ID`,y=SNP_count,fill = `Particip
                                    hjust = 1),
         axis.title.x = element_text(margin = margin(t=10)),
         plot.title = element_text(size = 22))
-ggsave("figs/vaccinated_SNPs_shared_total_box.png")
-save(vax_count_gather,file = "vax_count_gather.Rdata")
 
-
+ggsave("figs/vax_SNPcounts.png")

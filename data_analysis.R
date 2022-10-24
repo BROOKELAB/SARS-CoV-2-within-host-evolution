@@ -3,44 +3,64 @@ library(rio)
 library(here)
 
 #overall average iSNV count
-load("naive_count_gather.RData")
-load("vax_count_gather.RData")
-total_count <- rbind(naive_count_gather,vax_count_gather)$SNP_count
-total_count <- total_count[which(!is.na(total_count))]
-mean(total_count)
-#37.56
+load("naive_snpcounts.RData")
+load("vax_snpcounts.RData")
+total.count <- rbind(naive.snpcounts,snpcounts.vax)$SNP_count
+mean(total.count)
+#37.47
 
 #naive vs vaccinated iSNV counts
-load("naive_count_gather.RData")
-load("vax_count_gather.RData")
-naive.snpcount <- naive_count_gather$SNP_count[which(!is.na(naive_count_gather$SNP_count))]
-vax.snpcount <- vax_count_gather$SNP_count[which(!is.na(vax_count_gather$SNP_count))]
-t.test(naive.snpcount,vax.snpcount)
+load("naive_snpcounts.RData")
+load("vax_snpcounts.RData")
+t.test(naive.snpcounts$SNP_count,snpcounts.vax$SNP_count)
 
-#naive mean = 33.38562
-#vax mean = 51.73333
-#p-value = 0.05645
+#naive mean = 33.30065
+#vax mean = 51.66667
+#p-value = 0.0559
 
 #overall average shared iSNV count
 load("naive_shared.RData")
-load("vaccinated_shared.RData")
-total_shared <- rbind(naive_shared,vaccinated_shared)$Shared
-mean(total_shared)
+load("vax_shared.RData")
+vax.shared <- vax.shared[-c(1,6,12),] #remove dates with only 1 timepoint
+total.shared <- rbind(naive.shared,vax.shared)$Shared
+mean(total.shared)
+#6.31
 
 #naive vs vaccinated shared iSNV counts
 load("naive_shared.RData")
-load("vaccinated_shared.RData")
-naive_shared <- naive_shared$Shared
-vaccinated_shared <- vaccinated_shared$Shared
-snpcount.test.shared <- t.test(naive_shared,vaccinated_shared)
+load("vax_shared.RData")
+vax.shared <- vax.shared[-c(1,6,12),] #remove dates with only 1 timepoint
+naive.shared <- naive.shared$Shared
+vax.shared <- vax.shared$Shared
+t.test(naive.shared,vax.shared)
 #naive mean = 6.65
 #vax mean = 5.55
 #p-value = 0.6734
 
+#naive vs vax ct
+naive.ct <- import("naive_ct.xlsx")
+vax.ct <- import("vaccinated_ct.csv")
+t.test(naive.ct$ct,vax.ct$ct)
+#naive = 23.79307 #vax = 25.14644
+#p-value = 0.007773
 
 #proportion of nucleocapsid iSNVs in naive vs vax participants
 naive.ann <- import("naive_annotations.csv")
-vax.ann <- import("vaccinated_annotations.csv")
+vax.ann <- import("vax_annotations.csv")
+
+naive.ann <- naive.ann %>%
+  mutate(naive.n = NA)
+vax.ann <- vax.ann %>%
+  mutate(vax.n = NA)
+
+naive.ann$naive.n[which(naive.ann$GENE == "N")] <- 1
+naive.ann$naive.n[which(naive.ann$GENE != "N")] <- 0
+vax.ann$vax.n[which(vax.ann$GENE == "N")] <- 1
+vax.ann$vax.n[which(vax.ann$GENE != "N")] <- 0
+
+naive.n <- naive.ann$naive.n
+vax.n <- vax.ann$vax.n
+vax.n.cut <- vax.ann$vax.n[which(vax.ann$ID != "471876")]
 
 n.dat <- data.frame(
   n = c(sum(naive.n==1),sum(vax.n==1)),
@@ -52,33 +72,31 @@ n.dat.cut <- data.frame(
   other =  c(sum(naive.n==0),sum(vax.n.cut==0)),
   row.names = c("naive","vax")
 )
-n.fisher <- fisher.test(n.dat)
-#p-value = 1.918e-06
-n.fisher.cut <- fisher.test(n.dat.cut)
-#p-value = 0.03669
+fisher.test(n.dat)
+#p-value = 2.618e-06
+fisher.test(n.dat.cut)
+#p-value = 0.03907
 
 #naive iSNV count over time
-load("naive_count_gather.RData")
+load("naive_snpcounts.RData")
 naive.ct <- import("naive_ct.xlsx")
-naive_count_gather <- naive_count_gather%>%
-  filter(!is.na(SNP_count))%>%
+naive.snpcounts <- naive.snpcounts%>%
   mutate(ct = naive.ct$ct)%>%
   filter(ct < 25) #filter for samples unlikely to have high #s of seq artifacts
+naive.count.num <- naive.snpcounts
+naive.count.num$day_of_infection <- as.numeric(naive.count.num$day_of_infection)
+naive.dailysnp <- lm(SNP_count~day_of_infection,data = naive.count.num)
+summary(naive.dailysnp)
+#adjusted r-squared = 0.05581, p-value: 0.01671
 
-naive_count_num <- naive_count_gather
-naive_count_num$day <- as.numeric(naive_count_num$day)
-naive_dailysnp <- lm(SNP_count~day,data = naive_count_num)
-summary(naive_dailysnp)
-#adjusted r-squared = 0.05007, p-value: 0.02255
-
-#plot iSNV count vs day (FIG 2C)
-naive_count_gather$day <- as.character(naive_count_gather$day)
-ggplot(data = naive_count_gather, aes(x=day,y=SNP_count))+
+#plot naive iSNV count vs day
+naive.snpcounts$day_of_infection <- as.character(naive.snpcounts$day_of_infection)
+ggplot(data = naive.snpcounts, aes(x=day_of_infection,y=SNP_count))+
   geom_point(cex=4)+
-  scale_x_discrete(limits = factor(c(1:9)))+
+  scale_x_discrete(limits = factor(c(1:10)))+
   scale_y_continuous(limits = c(0,100))+
-  geom_abline(intercept = 2.6549,slope=2.1281,color="grey50")+
-  xlab("Time Point") +
+  geom_abline(intercept = 2.4448,slope=1.8561,color="grey50")+
+  xlab("Day Post-Enrollment") +
   ylab("iSNV Count")+
   ggtitle("Unvaccinated")+
   theme_bw()+
@@ -87,27 +105,25 @@ ggplot(data = naive_count_gather, aes(x=day,y=SNP_count))+
 ggsave("figs/naive_snps_vs_day.png")
 
 #vaccinated iSNV count over time
-load("vax_count_gather.RData")
+load("vax_snpcounts.RData")
 vax.ct <- import("vaccinated_ct.csv")
-vax_count_gather <- vax_count_gather%>%
-  filter(!is.na(SNP_count))%>%
+snpcounts.vax <- snpcounts.vax%>%
   mutate(ct = vax.ct$ct)%>%
   filter(ct < 25)
 
-vax_count_num  <- vax_count_gather
-vax_count_num$day <- as.numeric(vax_count_num$day)
-vax_dailysnp <- lm(SNP_count~day,data = vax_count_num)
-summary(vax_dailysnp)
-#adjusted r-squared = 0.2857, p-value = 0.006103  
+vax.count.num  <- snpcounts.vax
+vax.count.num$day_of_infection <- as.numeric(vax.count.num$day_of_infection)
+vax.dailysnp <- lm(SNP_count~day_of_infection,data = vax.count.num)
+summary(vax.dailysnp)
+#adjusted r-squared = 0.001935 , p-value = 0.3198  
 
-#plot iSNV count vs day (FIG 2D)
-vax_count_gather$day <- as.character(vax_count_gather$day)
-ggplot(data = vax_count_gather, aes(x=day,y=SNP_count))+
+#plot vax iSNV count vs day
+snpcounts.vax$day_of_infection <- as.character(snpcounts.vax$day_of_infection)
+ggplot(data = snpcounts.vax, aes(x=day_of_infection,y=SNP_count))+
   geom_point(cex=4)+
-  scale_x_discrete(limits = factor(c(1:7)))+
+  scale_x_discrete(limits = factor(c(1:11)))+
   scale_y_continuous(limits = c(0,100))+
-  geom_abline(intercept = 0.1923,slope=4.3511,color="grey50")+
-  xlab("Time Point") +
+  xlab("Day Post-Enrollment") +
   ylab("iSNV Count")+
   ggtitle("Immune")+
   theme_bw()+

@@ -2,7 +2,6 @@ library(tidyverse)
 library(rio)
 library(rlist)
 library(gdata)
-library(compiler)
 library(gtools)
 library(here)
 
@@ -53,7 +52,9 @@ for(i in seq_along(nasal.files)){
   nasal.files[[i]] <- lapply(nasal.files[[i]],nasal.read2)
 }
 
-sleekuser_nas <- list()
+nasal.files$user_451709 <- nasal.files$user_451709[-c(2,5,7)] #removal due to potential contamination
+
+sleekuser.nas <- list()
 nasal.sleek <- function(file){
   file <- file %>%
     filter(ALT_FREQ >= .03) %>% 
@@ -77,6 +78,9 @@ nasal.sleek <- function(file){
     filter(POS != 21137) %>%
     filter(POS != 24034) %>%
     filter(POS != 24378) %>%
+    filter(POS != 25314) %>%
+    filter(POS != 25317) %>%
+    filter(POS != 25324) %>%
     filter(POS != 25563) %>%
     filter(POS != 26144) %>%
     filter(POS != 26461) %>%
@@ -89,10 +93,10 @@ nasal.sleek <- function(file){
   return(file)
 } #contains depth and frequency cutoffs
 for(i in seq_along(nasal.files)){
-  sleekuser_nas[[i]] <- lapply(nasal.files[[i]],nasal.sleek)
+  sleekuser.nas[[i]] <- lapply(nasal.files[[i]],nasal.sleek)
 }
-names(sleekuser_nas) <- names(nasal.dirs)
-everythinguser_nas <- nasal.files
+names(sleekuser.nas) <- names(nasal.dirs)
+everythinguser.nas <- nasal.files
 
 #count number of SNPs for each user
 snpcount <- function(user){
@@ -106,19 +110,19 @@ snpcount <- function(user){
   }
   return(snplength)
 }
-snpcounts_nas <- lapply(sleekuser_nas,snpcount)
+snpcounts.nas <- lapply(sleekuser.nas,snpcount)
 
-snpcounts_dat_nas <- data.frame(matrix(ncol = 14,nrow = 10))
-rownames(snpcounts_dat_nas) <- paste("time point",1:10)
-colnames(snpcounts_dat_nas) <- names(nasal.dirs)
-for(i in seq_along(snpcounts_nas)){
-  for(j in seq_along(snpcounts_nas[[i]])){
-    snpcounts_dat_nas[j,i] <- snpcounts_nas[[i]][[j]]
+snpcounts.nas <- data.frame(matrix(ncol = 14,nrow = 10))
+rownames(snpcounts.nas) <- paste("time point",1:10)
+colnames(snpcounts.nas) <- names(nasal.dirs)
+for(i in seq_along(snpcounts.nas)){
+  for(j in seq_along(snpcounts.nas[[i]])){
+    snpcounts.nas[j,i] <- snpcounts.nas[[i]][[j]]
   }
 }
 
-#save(snpcounts_dat_nas, file = "snpcounts_dat_nas.RData")
-#write.csv(snpcounts_dat_nas,"nasal_snpcounts.csv")
+save(snpcounts.nas, file = "snpcounts_nas.RData")
+write.csv(snpcounts.nas,"nasal_snpcounts.csv")
 
 #pull out SNP positions
 positions <- function(sleekuser){
@@ -129,7 +133,7 @@ positions <- function(sleekuser){
   }
   return(allpos)
 }
-allpos_nas <- lapply(sleekuser_nas,positions)
+allpos.nas <- lapply(sleekuser.nas,positions)
 
 keepunique <- function(pos){
   splat <- list.rbind(pos)
@@ -140,163 +144,33 @@ keepunique <- function(pos){
     filter(POS != 29051)
   return(unique)
 }
-uniqueSNPs_nas <- list()
-uniquecounts_nas <- list()
-for(i in seq_along(allpos_nas)){
-  uniqueSNPs_nas[[i]] <- keepunique(allpos_nas[[i]])
-  uniquecounts_nas[[i]] <- length(uniqueSNPs_nas[[i]]$POS)
+uniqueSNPs.nas <- list()
+uniquecounts.nas <- list()
+for(i in seq_along(allpos.nas)){
+  uniqueSNPs.nas[[i]] <- keepunique(allpos.nas[[i]])
+  uniquecounts.nas[[i]] <- length(uniqueSNPs.nas[[i]]$POS)
 }
 
 #pull out intersecting variants
-var1 <- function(allpos){
-  time1 <- list()
-  for(i in 1:length(allpos)){
-    time1[[i]] <- dplyr::intersect(allpos[[1]],allpos[[i]])
+snp.intersect <- function(allpos){
+  expand <- expand.grid(seq_along(allpos), seq_along(allpos))
+  expand <- expand[,c("Var2","Var1")]
+  expand <- expand[which(expand$Var1 != expand$Var2),]
+  intersecting <- vector(mode = "list", length = length(expand))
+  for(i in seq_along(expand$Var2)){
+    intersecting[[i]] <- dplyr::intersect(allpos[[expand$Var2[[i]]]],
+                                          allpos[[expand$Var1[[i]]]])
   }
-  return(time1)
-}
-var2 <- function(allpos){
-  time2 <- list()
-  for(i in 1:length(allpos)){
-    time2[[i]] <- dplyr::intersect(allpos[[2]],allpos[[i]])
-  }
-  return(time2)
-}
-var3 <- function(allpos){
-  time3 <- list()
-  for(i in 1:length(allpos)){
-    time3[[i]] <- dplyr::intersect(allpos[[3]],allpos[[i]])
-  }
-  return(time3)
-}
-var4 <- function(allpos){
-  time4 <- list()
-  for(i in 1:length(allpos)){
-    time4[[i]] <- dplyr::intersect(allpos[[4]],allpos[[i]])
-  }
-  return(time4)
-}
-var5 <- function(allpos){
-  time5 <- list()
-  for(i in 1:length(allpos)){
-    time5[[i]] <- dplyr::intersect(allpos[[5]],allpos[[i]])
-  }
-  return(time5)
-}
-var6 <- function(allpos){
-  time6 <- list()
-  for(i in 1:length(allpos)){
-    time6[[i]] <- dplyr::intersect(allpos[[6]],allpos[[i]])
-  }
-  return(time6)
-}
-var7 <- function(allpos){
-  time7 <- list()
-  for(i in 1:length(allpos)){
-    time7[[i]] <- dplyr::intersect(allpos[[7]],allpos[[i]])
-  }
-  return(time7)
-}
-var8 <- function(allpos){
-  time8 <- list()
-  for(i in 1:length(allpos)){
-    time8[[i]] <- dplyr::intersect(allpos[[8]],allpos[[i]])
-  }
-  return(time8)
-}
-var9 <- function(allpos){
-  time9 <- list()
-  for(i in 1:length(allpos)){
-    time9[[i]] <- dplyr::intersect(allpos[[9]],allpos[[i]])
-  }
-  return(time9)
-}
-var10 <- function(allpos){
-  time10 <- list()
-  for(i in 1:length(allpos)){
-    time10[[i]] <- dplyr::intersect(allpos[[10]],allpos[[i]])
-  }
-  return(time10)
-}
-
-var_432686 <- list("time1"=var1(allpos_nas[[1]]),"time2"=var2(allpos_nas[[1]]),
-                   "time3"=var3(allpos_nas[[1]]),"time4"=var4(allpos_nas[[1]]))
-var_433227 <- list("time1"=var1(allpos_nas[[2]]),"time2"=var2(allpos_nas[[2]]),
-                   "time3"=var3(allpos_nas[[2]]),"time4"=var4(allpos_nas[[2]]),
-                   "time5"=var5(allpos_nas[[2]]),"time6"=var6(allpos_nas[[2]]))
-var_438577 <- list("time1"=var1(allpos_nas[[3]]),"time2"=var2(allpos_nas[[3]]),
-                   "time3"=var3(allpos_nas[[3]]),"time4"=var4(allpos_nas[[3]]),
-                   "time5"=var5(allpos_nas[[3]]),"time6"=var6(allpos_nas[[3]]))
-var_442978 <- list("time1"=var1(allpos_nas[[4]]),"time2"=var2(allpos_nas[[4]]),
-                   "time3"=var3(allpos_nas[[4]]),"time4"=var4(allpos_nas[[4]]),
-                   "time5"=var5(allpos_nas[[4]]),"time6"=var6(allpos_nas[[4]]))
-var_444332 <- list("time1"=var1(allpos_nas[[5]]),"time2"=var2(allpos_nas[[5]]),
-                   "time3"=var3(allpos_nas[[5]]),"time4"=var4(allpos_nas[[5]]),
-                   "time5"=var5(allpos_nas[[5]]),"time6"=var6(allpos_nas[[5]]),
-                   "time7"=var7(allpos_nas[[5]]),"time8"=var8(allpos_nas[[5]]),
-                   "time9"=var9(allpos_nas[[5]]),"time10"=var10(allpos_nas[[5]]))
-var_444633 <- list("time1"=var1(allpos_nas[[6]]),"time2"=var2(allpos_nas[[6]]),
-                   "time3"=var3(allpos_nas[[6]]),"time4"=var4(allpos_nas[[6]]),
-                   "time5"=var5(allpos_nas[[6]]))
-var_450241 <- list("time1"=var1(allpos_nas[[7]]),"time2"=var2(allpos_nas[[7]]),
-                   "time3"=var3(allpos_nas[[7]]))
-var_451152 <- list("time1"=var1(allpos_nas[[8]]),"time2"=var2(allpos_nas[[8]]),
-                   "time3"=var3(allpos_nas[[8]]),"time4"=var4(allpos_nas[[8]]),
-                   "time5"=var5(allpos_nas[[8]]))
-var_451709 <- list("time1"=var1(allpos_nas[[9]]),"time2"=var2(allpos_nas[[9]]),
-                   "time3"=var3(allpos_nas[[9]]),"time4"=var4(allpos_nas[[9]]),
-                   "time5"=var5(allpos_nas[[9]]),"time6"=var6(allpos_nas[[9]]),
-                   "time7"=var7(allpos_nas[[9]]),"time8"=var8(allpos_nas[[9]]))
-var_453058 <- list("time1"=var1(allpos_nas[[10]]),"time2"=var2(allpos_nas[[10]]),
-                   "time3"=var3(allpos_nas[[10]]),"time4"=var4(allpos_nas[[10]]),
-                   "time5"=var5(allpos_nas[[10]]))
-var_459597 <- list("time1"=var1(allpos_nas[[11]]),"time2"=var2(allpos_nas[[11]]),
-                   "time3"=var3(allpos_nas[[11]]),"time4"=var4(allpos_nas[[11]]),
-                   "time5"=var5(allpos_nas[[11]]))
-var_471467 <- list("time1"=var1(allpos_nas[[12]]),"time2"=var2(allpos_nas[[12]]),
-                   "time3"=var3(allpos_nas[[12]]),"time4"=var4(allpos_nas[[12]]),
-                   "time5"=var5(allpos_nas[[12]]))
-var_471588 <- list("time1"=var1(allpos_nas[[13]]),"time2"=var2(allpos_nas[[13]]),
-                   "time3"=var3(allpos_nas[[13]]),"time4"=var4(allpos_nas[[13]]))
-var_475670 <- list("time1"=var1(allpos_nas[[14]]),"time2"=var2(allpos_nas[[14]]),
-                   "time3"=var3(allpos_nas[[14]]),"time4"=var4(allpos_nas[[14]]),
-                   "time5"=var5(allpos_nas[[14]]))
-
-var_list_nas <- list("var_432686"=var_432686,"var_433227"=var_433227,
-                 "var_438577"=var_438577,"var_442978"=var_442978,
-                 "var_444332"=var_444332,"var_444633"=var_444633,
-                 "var_450241"=var_450241,"var_451152"=var_451152,
-                 "var_451709"=var_451709,"var_453058"=var_453058,
-                 "var_459597"=var_459597,"var_471467"=var_471467,
-                 "var_471588"=var_471588,"var_475670"=var_475670)
-
-#remove self-comparison
-selfevict <- function(var){
-  for(i in 1:length(var)){
-    var[[i]][i] <- NA
-  }
-  return(var)
-}
-var_list_nas <- lapply(var_list_nas,selfevict)
-
-#write file for each user to a .csv
-var_filenames <- paste0("nasal_intersect/",names(var_list_nas),".csv")
-for(i in seq_along(var_list_nas)){
-  capture.output(var_list_nas[[i]],file=var_filenames[[i]])
-}
-
-#pull out a list of mutations that appear > once for each user
-keepcommon <- function(var){
-  flat <- flatten(var)
-  splat <- na.omit(rlist::list.rbind(flat))
-  common <- distinct(splat)
+  flat <- bind_rows(intersecting)
+  common <- distinct(flat)
   return(common)
 }
-nasal_intersecting <- lapply(var_list_nas,keepcommon)
-names(nasal_intersecting) <- gsub("var","int",names(var_list_nas))
-nasal_intersecting <- lapply(nasal_intersecting,arrange,POS)
 
-#save(nasal_intersecting,file = "nasal_intersecting.RData")
+nasal.intersecting <- lapply(allpos.nas,snp.intersect)
+nasal.intersecting <- lapply(nasal.intersecting,arrange,POS)
+
+save(nasal.intersecting,file = "nasal_intersecting.RData")
+
 
 #create variant plots
 varianttable <-function(intersectuser,everythinguser){
@@ -339,12 +213,11 @@ varianttable <-function(intersectuser,everythinguser){
   joiner <- joiner[,keepvec]
   return(joiner)
 } 
-varianttable <- cmpfun(varianttable)
 nasal.vartables <- list()
-for(i in seq_along(nasal_intersecting)){
-  nasal.vartables[[i]] <- varianttable(nasal_intersecting[[i]],everythinguser_nas[[i]])
+for(i in seq_along(nasal.intersecting)){
+  nasal.vartables[[i]] <- varianttable(nasal.intersecting[[i]],everythinguser.nas[[i]])
 }
-names(nasal.vartables) <- names(sleekuser_nas)
+names(nasal.vartables) <- names(sleekuser.nas)
 
 #replace NA with 0.01
 NA_01 <- function(vartable){
