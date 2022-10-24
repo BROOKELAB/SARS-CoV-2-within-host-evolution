@@ -121,7 +121,6 @@ for(i in seq_along(snpcounts.nas)){
   }
 }
 
-save(snpcounts.nas, file = "snpcounts_nas.RData")
 write.csv(snpcounts.nas,"nasal_snpcounts.csv")
 
 #pull out SNP positions
