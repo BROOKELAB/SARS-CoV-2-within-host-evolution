@@ -595,7 +595,23 @@ comp.list$user_475670 <- freq1(comp.list$user_475670)
 comp.list$user_475670 <- freq2(comp.list$user_475670)
 comp.list$user_475670 <- freq3(comp.list$user_475670)
 
-save(comp.list, file = "comparison_list_unfiltered.RData")
+#remove consensus variants
+remove.consensus <- function(user){
+  info <- user[,1:4]
+  freqs <- user[,grep("FREQ",colnames(user))]
+  for(i in seq_along(rownames(freqs))){
+    if(all(freqs[i,] > .97 | is.na(freqs[i,]))){
+      freqs[i,] <- "X"
+    }
+  }
+  final <- cbind(info,freqs)
+  final <- final %>%
+    filter(NASAL_FREQ_1 != "X" | is.na(NASAL_FREQ_1))
+  return(final)
+}
+comp.list <- lapply(comp.list,remove.consensus)
+
+save(comp.list, file = "comparison_list.RData")
 
 #replace NA with NaN (to read into matlab)
 for(i in seq_along(comp.list)){
@@ -607,40 +623,20 @@ for(i in seq_along(comp.list)){
   write.csv(comp.list[[i]],filenames[[i]])
 }
 
-for(i in seq_along(comp.tables)){
-  for(j in seq_along(comp.tables[[i]])){
-    for(x in seq_along(comp.tables[[i]][[j]]$POS)){
-      if(is.na(comp.tables[[i]][[j]]$NASAL_FREQ[[x]])){
-        comp.tables[[i]][[j]]$NASAL_FREQ[[x]] <- 0
-      }
-      if(is.na(comp.tables[[i]][[j]]$SALIVA_FREQ[[x]])){
-        comp.tables[[i]][[j]]$SALIVA_FREQ[[x]] <- 0
-      }
-    }
-  }
+#frequency comparisons
+freq.comp <- function(user){
+  nasal.user <- user[,grep("NASAL",colnames(user))]
+  nasal.user <- (pivot_longer(nasal.user, cols = everything()))[,2]
+  colnames(nasal.user) <- "NASAL"
+  saliva.user <- user[,grep("SALIVA",colnames(user))]
+  saliva.user <- (pivot_longer(saliva.user, cols = everything()))[,2]
+  colnames(saliva.user) <- "SALIVA"
+  saliva.nasal <- bind_cols(saliva.user,nasal.user)
+  return(saliva.nasal)
 }
 
-for(i in seq_along(comp.tables)){
-  for(j in seq_along(comp.tables[[i]])){
-    for(x in seq_along(comp.tables[[i]][[j]]$POS)){
-      if(comp.tables[[i]][[j]]$NASAL_FREQ[[x]] == "X"){
-        comp.tables[[i]][[j]]$NASAL_FREQ[[x]] <- NA
-      }
-      if(comp.tables[[i]][[j]]$SALIVA_FREQ[[x]] == "X"){
-        comp.tables[[i]][[j]]$SALIVA_FREQ[[x]] <- NA
-      }
-    }
-  }
-}
-
-
-unlist.comp <- list()
-for(i in seq_along(comp.tables)){
-  unlist.comp[[i]] <- rlist::list.rbind(comp.tables[[i]])
-}
-unlist.comp <- rlist::list.rbind(unlist.comp)
-unlist.comp <- select(unlist.comp,NASAL_FREQ,SALIVA_FREQ)
-unlist.comp <- na.omit(unlist.comp)
+unlist.comp <- lapply(comp.list,freq.comp)
+unlist.comp <- bind_rows(unlist.comp)
 write.csv(unlist.comp,"nasal_saliva_freqs.csv")
 
 #distribution of saliva iSNVs missing from nasal
@@ -673,10 +669,12 @@ missing.distribution <- function(user){
 distributions <- lapply(comp.list,missing.distribution)
 distributions <- unlist(distributions)
 distributions <- as.data.frame(distributions)
-  
+quantile(distributions$distributions)
+
 ggplot(distributions, aes(x = distributions))+
   geom_histogram(aes(y=stat(density)), bins =100)+
   geom_density()+
+  geom_vline(xintercept = 0.03, color = "red")+
   xlab("Frequency")+
   ylab("Density")+
   ggtitle("Frequency distribution of saliva iSNVs \nmissing from nasal compartment")+
