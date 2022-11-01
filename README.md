@@ -48,7 +48,7 @@ All files required for analysis and all script outputs are stored in `SARS_data.
 	      * **Fig 1C**
 	      * **Fig S1**
 	      
-## 2. Within-host diversity and iSNV tracking *(Fig 2, 5, 6, S5, S6)*
+## 2. Within-host diversity and iSNV tracking *(Fig 2, 5, 6, S4, S5)*
 
 1. Run `naivevariants.R`
     * Folders and files required:
@@ -107,7 +107,7 @@ All files required for analysis and all script outputs are stored in `SARS_data.
 		* `saliva_coverage_depths.RData`
 		* `nasal_coverage_depths.Rdata`
 
-## 5. Nasal samples and environmental compartmentalization *(Fig 4, S3C, S4, S7)*
+## 5. Nasal samples and environmental compartmentalization *(Fig 4, S3C, S6)*
 
 1. Run `nasal_saliva.R`
 	* Folders and files required:
@@ -128,15 +128,11 @@ All files required for analysis and all script outputs are stored in `SARS_data.
 	   * `user_fst.RData` (R list object containing within- and between-environment FST values for each individual)
 	   * `FST_tables/` (.csv tables of within- and between-environment FST values for each individual)
 	   * `FST_significance.csv` (significance values for comparisons of FSTs in within- vs. between-environment pairings)
-3. Run `monte_carlo.R`
-   * Folders and files required:
-	   * `comparison_list.RData`
-   * Output:
-	   * **Fig S4**
-4. Run `nasalvariants.R`
+3. Run `nasalvariants.R`
    * Folders and files required:
 	   * `nasal_output_tables/`
-   * Output:
+   * Output: 
+	   * **Fig S6**
 	   * `nasal_snpcounts.csv` (daily iSNV counts per participant)
 	   * `nasal_variant_tables/` (iSNV frequency tracking over time, tables imported into Prism to generate **Fig S7**)
 
