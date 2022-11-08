@@ -190,7 +190,7 @@ sleekuser.vax <- lapply(dirlist.vax,sleek)
 everythinguser.vax <- lapply(dirlist.vax,everything)
 effuser.vax <- lapply(dirlist.vax,eff)
 
-names(sleekuser.vax) <- c("461913","471876","475670","475951","481242","481672",
+names(sleekuser.vax) <- c("461913","471876","475670","481242","481672",
                       "482828","484249","486422","487250","487297",
                       "487941")
 names(everythinguser.vax) <- names(sleekuser.vax)
@@ -328,9 +328,9 @@ varianttable <- function(intersectuser,everythinguser){
 } 
 
 #remove users with no shared iSNVs
-vax.intersecting <- vax.intersecting[-c(1,4,6,8,9,11,12)]
-everythinguser.vax <- everythinguser.vax[-c(1,4,6,8,9,11,12)]
-effuser.vax <- effuser.vax[-c(1,4,6,8,9,11,12)]
+vax.intersecting <- vax.intersecting[-c(1,5,7,8,10,11)]
+everythinguser.vax <- everythinguser.vax[-c(1,5,7,8,10,11)]
+effuser.vax <- effuser.vax[-c(1,5,7,8,10,11)]
 
 vax.vartables <- list()
 for(i in seq_along(vax.intersecting)){
@@ -487,7 +487,7 @@ for(i in seq_along(vax.intersecting)){
 }
 
 #compile all iSNV count data (shared iSNVs, unique iSNVs, and total iSNVs)
-vax.shared <- as.data.frame(matrix(nrow = 12,ncol = 4))
+vax.shared <- as.data.frame(matrix(nrow = 11,ncol = 4))
 colnames(vax.shared) <- c("Participant ID", "Shared", "Unique", "Total")
 vax.shared[,1] <- names(dirlist.vax)
 vax.shared[,2] <- as.numeric(unlist(vax.intersect.lengths))
@@ -503,22 +503,22 @@ load("vax_shared.RData")
 snpcounts.vax <- as_tibble(snpcounts.vax)
 snpcounts.vax$user_id <- as.character(snpcounts.vax$user_id)
 
-twelve.palette <- c("#9D6A90","#8E759F","#7981AA","#618CAF","#4696AE","#2E9EA7","#27A59B",
-                    "#37AB8B","#52AF79","#6FB267","#8CB356","#AAB24A","#C8AF46")
+eleven.palette <- c("#9D6A90","#8B77A2","#7085AD","#5192AF","#339CA9","#27A59B",
+                    "#3CAC88","#5DB071","#80B35C","#A4B24C","#C8AF46")
 
-vax.shared[c(1,6,12),] <- NA #only 1 datapoint
+vax.shared[c(1,5,11),] <- NA #only 1 datapoint
 
 ggplot(data=snpcounts.vax,aes(x=user_id,y=SNP_count,fill = user_id))+
   geom_dotplot(binaxis = "y", binwidth = .08,stackdir = "center", color = NA)+
   xlab("Participant ID")+
   ylab("iSNV Count")+
-  ggtitle("Immune")+
+  ggtitle("Vaccinated")+
   scale_y_log10()+
   geom_col(data = vax.shared,aes(x=`Participant ID`,y=Shared), 
            fill=NA,color = "black")+
   geom_col(data=vax.shared,aes(x=`Participant ID`,y=Total),
            fill=NA,color="grey40")+
-  scale_fill_manual(values = twelve.palette)+
+  scale_fill_manual(values = eleven.palette)+
   theme_bw()+
   theme(axis.title = element_text(size=22),axis.text = element_text(size = 19),
         legend.title = element_text(size = 18),legend.text = element_text(size = 15),

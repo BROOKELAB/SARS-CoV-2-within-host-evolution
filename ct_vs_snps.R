@@ -17,7 +17,7 @@ ggplot(data = together.ct, aes(x=ct,y=SNP_count))+
 ggsave("figs/total_ctSNPs.png")
 cor.test(together.ct$ct,together.ct$SNP_count,method="spearman",
                                exact = F)
-#rho = 0.6350996, p-value < 2.2e-16
+#rho = 0.6334929, p-value < 2.2e-16
 
 #ct vs shared snps
 load("naive_daily_shared.RData")
@@ -97,7 +97,7 @@ total.ct26 <- total.ct.cut[total.ct.cut$ct < 26,]
 total.ct25 <- total.ct.cut[total.ct.cut$ct < 25,]
 
 (length(total.ct28$user_id) - length(total.ct25$user_id))/(length(total.ct28$user_id))
-#0.4216216 (ie 42% reduction between ct28 and ct25 datasets)
+#0.4309392 (ie 43% reduction between ct28 and ct25 datasets)
 
 ggplot(data = total.ct28, aes(x = ct, y = shared_SNP_count))+
   geom_point(size = 4)+
@@ -152,7 +152,7 @@ set.seed(100)
 randoms <- list()
 for(i in 1:100){
   randoms[[i]] <- sample(1:length(total.ct28$shared_SNP_count), 
-                         length(total.ct26$shared_SNP_count))
+                         length(total.ct25$shared_SNP_count))
 }
 
 ct28.random <- list()
@@ -171,7 +171,7 @@ for(i in seq_along(randoms)){
 }
 rhos <- unlist(rhos)
 pvals <- unlist(pvals)
-mean(rhos) #0.1503527
-mean(pvals) #0.1150407
+mean(rhos) #0.1347405
+mean(pvals) #0.2496967
 
 

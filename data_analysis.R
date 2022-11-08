@@ -7,7 +7,7 @@ load("naive_snpcounts.RData")
 load("vax_snpcounts.RData")
 total.count <- rbind(naive.snpcounts,snpcounts.vax)$SNP_count
 mean(total.count)
-#37.47
+#38.10309
 
 #naive vs vaccinated iSNV counts
 load("naive_snpcounts.RData")
@@ -15,34 +15,34 @@ load("vax_snpcounts.RData")
 t.test(naive.snpcounts$SNP_count,snpcounts.vax$SNP_count)
 
 #naive mean = 33.30065
-#vax mean = 51.66667
-#p-value = 0.0559
+#vax mean = 56.02439
+#p-value = 0.02503
 
 #overall average shared iSNV count
 load("naive_shared.RData")
 load("vax_shared.RData")
-vax.shared <- vax.shared[-c(1,6,12),] #remove dates with only 1 timepoint
+vax.shared <- vax.shared[-c(1,5,11),] #remove dates with only 1 timepoint
 total.shared <- rbind(naive.shared,vax.shared)$Shared
 mean(total.shared)
-#6.31
+#6.535714
 
 #naive vs vaccinated shared iSNV counts
 load("naive_shared.RData")
 load("vax_shared.RData")
-vax.shared <- vax.shared[-c(1,6,12),] #remove dates with only 1 timepoint
+vax.shared <- vax.shared[-c(1,5,11),] #remove dates with only 1 timepoint
 naive.shared <- naive.shared$Shared
 vax.shared <- vax.shared$Shared
 t.test(naive.shared,vax.shared)
 #naive mean = 6.65
-#vax mean = 5.55
-#p-value = 0.6734
+#vax mean = 6.25
+#p-value = 0.8844
 
 #naive vs vax ct
 naive.ct <- import("naive_ct.xlsx")
 vax.ct <- import("vaccinated_ct.csv")
 t.test(naive.ct$ct,vax.ct$ct)
-#naive = 23.79307 #vax = 25.14644
-#p-value = 0.007773
+#naive = 23.79307 #vax = 25.36659
+#p-value = 0.003251
 
 #proportion of nucleocapsid iSNVs in naive vs vax participants
 naive.ann <- import("naive_annotations.csv")
@@ -115,7 +115,7 @@ vax.count.num  <- snpcounts.vax
 vax.count.num$day_of_infection <- as.numeric(vax.count.num$day_of_infection)
 vax.dailysnp <- lm(SNP_count~day_of_infection,data = vax.count.num)
 summary(vax.dailysnp)
-#adjusted r-squared = 0.001935 , p-value = 0.3198  
+#adjusted r-squared = -0.02873 , p-value = 0.4791  
 
 #plot vax iSNV count vs day
 snpcounts.vax$day_of_infection <- as.character(snpcounts.vax$day_of_infection)
@@ -125,7 +125,7 @@ ggplot(data = snpcounts.vax, aes(x=day_of_infection,y=SNP_count))+
   scale_y_continuous(limits = c(0,100))+
   xlab("Day Post-Enrollment") +
   ylab("iSNV Count")+
-  ggtitle("Immune")+
+  ggtitle("Vaccinated")+
   theme_bw()+
   theme(axis.title = element_text(size = 22),axis.text = element_text(size = 19),
         legend.position = "none",plot.title = element_text(size = 22))
