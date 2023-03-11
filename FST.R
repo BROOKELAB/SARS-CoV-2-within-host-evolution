@@ -34,6 +34,9 @@ calc.FST <- function(sample1,sample2){
   HS <- mean(c(s1.mean,s2.mean))
   HT <- mean(pop.haplotype)
   FST <- (HT-HS)/HT
+  if(FST == "NaN"){
+    FST <- 0
+  }
   return(FST)
 }
 
