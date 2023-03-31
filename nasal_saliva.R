@@ -3,83 +3,31 @@ library(rio)
 library(gtools)
 library(here)
 
-nasal.dirs <- list.dirs("nasal_output_tables_cut/")[-1]
+#read nasal files
+nasal.dirs <- list.dirs("nasal_output_tables_cut")[-c(1,2)]
 names(nasal.dirs) <- c("user_432686","user_433227","user_438577","user_442978",
                        "user_444332","user_444633","user_450241","user_451152",
                        "user_451709","user_453058","user_459597","user_471467",
                        "user_471588","user_475670")
-
 nasal.read <- function(dir){
-  full <- paste0(dir,"/",list.files(dir))
-  full <- mixedsort(sort(full))
-  files <- lapply(full, read.table,sep="\t")
+  full <- paste0(dir,"/",list.files(dir, pattern = "ivar"))
+  full <- mixedsort(sort(full)) #need this so it reads in date order
+  files <- lapply(full, read.table,sep="\t",header =T)
   return(files)
 }
-nasal.paths <- function(dir){
-  full <- list.files(dir)
-  name <- gsub(".hard-filtered.vcf","",full)
-  name <- mixedsort(sort(name))
-  return(name)
-}
-nasal.read2 <- function(file){
+nasal.files <- lapply(nasal.dirs, nasal.read)
+
+seq.filter <- function(file){
   file <- file %>%
-    select(V2,V4,V5,V8,V10)%>%
-    mutate("ID"=NA)%>%
-    dplyr::rename("POS"=V2)%>%
-    dplyr::rename("REF"=V4)%>%
-    dplyr::rename("ALT"=V5)%>%
-    dplyr::rename("INFO1"=V8)%>%
-    dplyr::rename("INFO2"=V10)%>%
-    mutate("ALT_FREQ"=NA)%>%
-    mutate("DP"=NA)
-  for(i in seq_along(file$INFO1)){
-    file$DP[[i]] <- strsplit(file$INFO1[[i]],";")[[1]][1]
-    file$DP[[i]] <- as.numeric(strsplit(file$DP[[i]],"=")[[1]][2])
-    file$ALT_FREQ[[i]] <- strsplit(file$INFO2[[i]],":")[[1]][4]
-  }
-  file$DP <- as.numeric(file$DP)
-  file <- file %>%
-    select("ID","POS","REF","ALT","ALT_FREQ","DP")%>%
-    mutate("SNP"=paste0(REF,POS,ALT))%>%
-    relocate(SNP,.before = ALT_FREQ)%>%
-    distinct()
-  return(file)
-}
-
-nasal.names <- lapply(nasal.dirs,nasal.paths)
-nasal.files <- lapply(nasal.dirs,nasal.read)
-for(i in seq_along(nasal.files)){
-  nasal.files[[i]] <- lapply(nasal.files[[i]],nasal.read2)
-}
-
-for(i in seq_along(nasal.files)){
-  for(j in seq_along(nasal.files[[i]])){
-    nasal.files[[i]][[j]]$ID <- nasal.names[[i]][[j]]
-  }
-}
-
-load("nasal_coverage_depths.RData")
-for(i in seq_along(nasal.files)){
-  for(j in seq_along(nasal.files[[i]])){
-    for(x in seq_along(nas.cov.files)){
-      if(names(nas.cov.files)[[x]] == nasal.files[[i]][[j]]$ID[[1]]){
-        nasal.files[[i]][[j]] <- nasal.files[[i]][[j]]%>%
-          mutate("COVERAGE" = nas.cov.files[[x]])
-      }
-    }
-  }
-}
-for(i in seq_along(nasal.files)){
-  for(j in seq_along(nasal.files[[i]])){
-    nasal.files[[i]][[j]] <- nasal.files[[i]][[j]]%>%
-      filter(COVERAGE >= 200) #this can change
-  }
-}
-
-nasal.clean <- function(file){
-  file <- file %>%
-    filter(ALT_FREQ >= .03) %>% 
-    #filter(DP >= 200) %>%
+    select(POS,REF,ALT,ALT_FREQ,TOTAL_DP) %>%
+    filter(ALT_FREQ >= 0.03)%>%
+    #filter(TOTAL_DP >= 1000)%>% 
+    #not filtering out depth yet because we want to distinguish between
+    #iSNVs not present and iSNVs present but at a low depth
+    filter(POS != 6696)%>% #these are likely sequencing artifacts
+    filter(POS!= 11074)%>%
+    filter(POS != 15965)%>%
+    filter(POS!= 29051)%>%
     filter(POS != 187) %>%
     filter(POS != 1059) %>%
     filter(POS != 2094) %>%
@@ -93,15 +41,11 @@ nasal.clean <- function(file){
     filter(POS != 11074) %>%
     filter(POS != 13408) %>%
     filter(POS != 14786) %>%
-    filter(POS != 15965) %>%
     filter(POS != 19684) %>%
     filter(POS != 20148) %>%
     filter(POS != 21137) %>%
     filter(POS != 24034) %>%
     filter(POS != 24378) %>%
-    filter(POS != 25314) %>%
-    filter(POS != 25317) %>%
-    filter(POS != 25324) %>%
     filter(POS != 25563) %>%
     filter(POS != 26144) %>%
     filter(POS != 26461) %>%
@@ -110,14 +54,16 @@ nasal.clean <- function(file){
     filter(POS != 28826) %>%
     filter(POS != 28854) %>%
     filter(POS != 29051) %>%
-    filter(POS != 29700)
-  return(file)
-} #contains frequency cutoffs
-
+    filter(POS != 29700)%>%
+    distinct()
+}
 for(i in seq_along(nasal.files)){
-  nasal.files[[i]] <- lapply(nasal.files[[i]],nasal.clean)
+  nasal.files[[i]] <- lapply(nasal.files[[i]], seq.filter)
+  nasal.files[[i]] <- lapply(nasal.files[[i]], mutate,"SNP" = paste0(REF,POS,ALT))
+  nasal.files[[i]] <- lapply(nasal.files[[i]], relocate, SNP, .after = ALT)
 }
 
+#read saliva files
 saliva.dirs <- list.dirs("saliva_output_tables")[-1]
 names(saliva.dirs) <- names(nasal.dirs)
 saliva.read <- function(dir){
@@ -126,52 +72,18 @@ saliva.read <- function(dir){
   return(files)
 }
 saliva.files <- lapply(saliva.dirs,saliva.read)
-saliva.paths <- function(dir){
-  full <- list.files(dir,pattern="ivar")
-  name <- gsub(".ivar.tsv","",full)
-  return(name)
-}
-saliva.names <- lapply(saliva.dirs,saliva.paths)
 
-for(i in seq_along(saliva.files)){
-  for(j in seq_along(saliva.files[[i]])){
-    saliva.files[[i]][[j]]$REGION <- saliva.names[[i]][[j]]
-  }
-}
-
-for(i in seq_along(saliva.files)){
-  for(j in seq_along(saliva.files[[i]])){
-    saliva.files[[i]][[j]] <- saliva.files[[i]][[j]]%>%
-      dplyr::rename("ID" = REGION)
-  }
-}
-
-load("saliva_coverage_depths.RData")
-for(i in seq_along(saliva.files)){
-  for(j in seq_along(saliva.files[[i]])){
-    for(x in seq_along(cov.files)){
-      if(names(cov.files)[[x]] == saliva.files[[i]][[j]]$ID[[1]]){
-        saliva.files[[i]][[j]] <- saliva.files[[i]][[j]]%>%
-          mutate("COVERAGE" = cov.files[[x]]$mean)
-      }
-    }
-  }
-}
-
-for(i in seq_along(saliva.files)){
-  for(j in seq_along(saliva.files[[i]])){
-    saliva.files[[i]][[j]] <- saliva.files[[i]][[j]] %>%
-      filter(COVERAGE >= 1000)
-  }
-}
-saliva.clean <- function(file){
+seq.filter <- function(file){
   file <- file %>%
-    dplyr::rename("DP"=TOTAL_DP)%>%
-    select(POS,REF,ALT,ALT_FREQ,DP,COVERAGE)
-  file$DP <- as.numeric(file$DP)
-  file <- file %>%
-    #filter(DP >= 500)%>%
-    filter(ALT_FREQ >= .03) %>% 
+    select(POS,REF,ALT,ALT_FREQ,TOTAL_DP) %>%
+    filter(ALT_FREQ >= 0.03)%>%
+    #filter(TOTAL_DP >= 1000)%>% 
+    #not filtering out depth yet because we want to distinguish between
+    #iSNVs not present and iSNVs present but at a low depth
+    filter(POS != 6696)%>% #these are likely sequencing artifacts
+    filter(POS!= 11074)%>%
+    filter(POS != 15965)%>%
+    filter(POS!= 29051)%>%
     filter(POS != 187) %>%
     filter(POS != 1059) %>%
     filter(POS != 2094) %>%
@@ -185,15 +97,11 @@ saliva.clean <- function(file){
     filter(POS != 11074) %>%
     filter(POS != 13408) %>%
     filter(POS != 14786) %>%
-    filter(POS != 15965) %>%
     filter(POS != 19684) %>%
     filter(POS != 20148) %>%
     filter(POS != 21137) %>%
     filter(POS != 24034) %>%
     filter(POS != 24378) %>%
-    filter(POS != 25314) %>%
-    filter(POS != 25317) %>%
-    filter(POS != 25324) %>%
     filter(POS != 25563) %>%
     filter(POS != 26144) %>%
     filter(POS != 26461) %>%
@@ -202,71 +110,62 @@ saliva.clean <- function(file){
     filter(POS != 28826) %>%
     filter(POS != 28854) %>%
     filter(POS != 29051) %>%
-    filter(POS != 29700) %>%
+    filter(POS != 29700)%>%
     distinct()
-  return(file)
 }
 for(i in seq_along(saliva.files)){
-  saliva.files[[i]] <- lapply(saliva.files[[i]],saliva.clean)
+  saliva.files[[i]] <- lapply(saliva.files[[i]], seq.filter)
+  saliva.files[[i]] <- lapply(saliva.files[[i]], mutate,"SNP" = paste0(REF,POS,ALT))
+  saliva.files[[i]] <- lapply(saliva.files[[i]], relocate, SNP, .after = ALT)
 }
 
-saliva.reformat <- function(saliva.user){
-  for(i in seq_along(saliva.user)){
-    for(j in seq_along(saliva.user[[i]]$ALT)){
-      if(substr(saliva.user[[i]]$ALT[[j]],0,1)=="+"){
-        saliva.user[[i]]$ALT[[j]] <- paste0(saliva.user[[i]]$REF[[j]], 
-                                             substr(saliva.user[[i]]$ALT[[j]],2,nchar(saliva.user[[i]]$ALT[[j]])))
-      }
-      if(substr(saliva.user[[i]]$ALT[[j]],0,1)=="-"){
-        saliva.user[[i]]$REF[[j]] <- paste0(saliva.user[[i]]$REF[[j]],
-                                             substr(saliva.user[[i]]$ALT[[j]],2,nchar(saliva.user[[i]]$ALT[[j]])))
-        saliva.user[[i]]$ALT[[j]] <- substr(saliva.user[[i]]$REF[[j]],0,1)
-      }
-    }
-  }
-  return(saliva.user)
+#comparing basic stats between nasal and saliva
+n.tot <- list()
+for(i in seq_along(nasal.files)){
+  n.tot[[i]] <- bind_rows(nasal.files[[i]])
 }
-saliva.files <- lapply(saliva.files,saliva.reformat)
+n.tot <- bind_rows(n.tot)
+median(n.tot$TOTAL_DP) #4261 median total reads per called variant site
+n.tot.filter <- n.tot %>%
+  filter(ALT_FREQ>=.03,ALT_FREQ<=.97)%>%
+  filter(TOTAL_DP >=1000)
+length(n.tot.filter$POS) #89 iSNVs total in all nasal samples
+
+#ggplot(data = n.tot, aes(x = TOTAL_DP))+
+  #geom_histogram(binwidth = 100)+
+  #scale_x_continuous(breaks = c(0,250,500,750,1000,5000,10000,15000,20000), 
+                     #limits = c(0,10000))
+
+s.tot <- list()
 for(i in seq_along(saliva.files)){
-  for(j in seq_along(saliva.files[[i]])){
-    saliva.files[[i]][[j]] <- saliva.files[[i]][[j]] %>% 
-      mutate(SNP = paste0(REF,POS,ALT))%>%
-      relocate(SNP,.before=ALT_FREQ)
-  }
+  s.tot[[i]] <- bind_rows(saliva.files[[i]])
 }
+s.tot <- bind_rows(s.tot)
+median(s.tot$TOTAL_DP) #1014 median total reads per called variant site
+s.tot.filter <- s.tot %>%
+  filter(ALT_FREQ>=.03,ALT_FREQ<=.97)%>%
+  filter(TOTAL_DP >=1000)
+length(s.tot.filter$POS) #1271 iSNVs total! even though coverage is the same
 
-#remove empty files that have been excluded for low coverage
-saliva.files$user_432686 <- saliva.files$user_432686[-2]
-nasal.files$user_432686 <- nasal.files$user_432686[-2]
-saliva.files$user_433227 <- saliva.files$user_433227[-c(1,6)]
-nasal.files$user_433227 <- nasal.files$user_433227[-c(1,6)]
-saliva.files$user_438577 <- saliva.files$user_438577[-c(2,6)]
-nasal.files$user_438577 <- nasal.files$user_438577[-c(2,6)]
-saliva.files$user_450241 <- saliva.files$user_450241[-c(2,3)]
-nasal.files$user_450241 <- nasal.files$user_450241[-c(2,3)]
-saliva.files$user_451709 <- saliva.files$user_451709[-6]
-nasal.files$user_451709 <- nasal.files$user_451709[-6]
-saliva.files$user_453058 <- saliva.files$user_453058[-c(1,4)]
-nasal.files$user_453058 <- nasal.files$user_453058[-c(1,4)]
-saliva.files$user_459597 <- saliva.files$user_459597[-4]
-nasal.files$user_459597 <- nasal.files$user_459597[-4]
-saliva.files$user_471588 <- saliva.files$user_471588[-4]
-nasal.files$user_471588 <- nasal.files$user_471588[-4]
+#ggplot(data = s.tot, aes(x = TOTAL_DP))+
+  #geom_histogram(binwidth = 100)+
+  #scale_x_continuous(breaks = c(0,250,500,750,1000,5000,10000,15000,20000), 
+                     #limits = c(0,10000))
 
-#get rid of times 2,5,7 from 451709 for potential contam
-#point 6 has already been removed (7 is now 6)
-saliva.files$user_451709 <- saliva.files$user_451709[-c(2,5,6)]
-nasal.files$user_451709 <- nasal.files$user_451709[-c(2,5,6)]
 
-#get rid of user 450241 because only 1 time pt
-saliva.files <- saliva.files[-7]
-nasal.files <- nasal.files[-7]
+#get rid of samples 2,5,7 from 451709 for potential contam
+#check if i still need to do this, depends if contam came from RNA or sequencing
+#will need to look at plots from nasal variant maps
 
-#pull intersecting mutations for nasal samples
+#pull intersecting iSNVs for nasal samples
+#(iSNVs between 3-97% freq, over 1000 dp, present on at least 2 days)
 positions <- function(sleekuser){
   allpos <- list()
   for (i in seq_along(sleekuser)){
     allpos[[i]] <- sleekuser[[i]] %>%
+      filter(ALT_FREQ >= 0.03) %>%
+      #filter(ALT_FREQ <= 0.97) %>%
+      filter(TOTAL_DP >= 1000) %>%
       select(POS,REF,ALT)
   }
   return(allpos)
@@ -302,6 +201,9 @@ positions <- function(sleekuser){
   allpos <- list()
   for (i in seq_along(sleekuser)){
     allpos[[i]] <- sleekuser[[i]] %>%
+      filter(ALT_FREQ >= 0.03) %>%
+      #filter(ALT_FREQ <= 0.97) %>%
+      filter(TOTAL_DP >= 1000) %>%
       select(POS,REF,ALT)
   }
   return(allpos)
@@ -331,66 +233,58 @@ for(i in seq_along(saliva.intersecting)){
     mutate("SNP" = paste0(REF,POS,ALT))
 }
 
-#pare down both sets of files to include just intersecting SNPs
+#pare down both datasets to include just intersecting iSNVs
+#will include all instances of intersecting iSNVs 
+#(even if they are outside of freq range on certain days)
+intersect.only <- function(file, intersecting){
+  for(i in seq_along(file)){
+    file[[i]] <- file[[i]][which(file[[i]]$SNP %in% intersecting$SNP),]
+  }
+  return(file)
+}
+
+nasal.cut <- list()
 for(i in seq_along(nasal.files)){
-  for(j in seq_along(nasal.files[[i]])){
-    nasal.files[[i]][[j]] <- nasal.files[[i]][[j]] %>%
-      mutate(KEEP=NA)
-    for(k in seq_along(nasal.files[[i]][[j]]$SNP)){
-      if(nasal.files[[i]][[j]]$SNP[[k]] %in% nasal.intersecting[[i]]$SNP){
-        nasal.files[[i]][[j]]$KEEP[[k]] <- "YES"
-      }else{
-        nasal.files[[i]][[j]]$KEEP[[k]] <- "NO"
-      }
-    }
-  }
+  nasal.cut[[i]] <- intersect.only(nasal.files[[i]], nasal.intersecting[[i]])
 }
+names(nasal.cut) <- names(nasal.files)
 
-for(i in seq_along(nasal.files)){
-  for(j in seq_along(nasal.files[[i]])){
-    nasal.files[[i]][[j]] <- nasal.files[[i]][[j]]%>%
-      filter(KEEP=="YES")
-  }
-}
-
+saliva.cut <- list()
 for(i in seq_along(saliva.files)){
-  for(j in seq_along(saliva.files[[i]])){
-    saliva.files[[i]][[j]] <- saliva.files[[i]][[j]] %>%
-      mutate(KEEP=NA)
-    for(k in seq_along(saliva.files[[i]][[j]]$SNP)){
-      if(saliva.files[[i]][[j]]$SNP[[k]] %in% saliva.intersecting[[i]]$SNP){
-        saliva.files[[i]][[j]]$KEEP[[k]] <- "YES"
-      }else{
-        saliva.files[[i]][[j]]$KEEP[[k]] <- "NO"
-      }
-    }
-  }
+  saliva.cut[[i]] <- intersect.only(saliva.files[[i]], saliva.intersecting[[i]])
 }
-
-for(i in seq_along(saliva.files)){
-  for(j in seq_along(saliva.files[[i]])){
-    saliva.files[[i]][[j]] <- saliva.files[[i]][[j]]%>%
-      filter(KEEP=="YES")
-  }
-}
+names(saliva.cut) <- names(saliva.files)
 
 #label low dp as X
-for(i in seq_along(nasal.files)){
-  for(j in seq_along(nasal.files[[i]])){
-    for(k in seq_along(nasal.files[[i]][[j]]$POS))
-    if(nasal.files[[i]][[j]]$DP[[k]] < 200){
-      nasal.files[[i]][[j]]$ALT_FREQ[[k]] <- "X"
+dp.relabel <- function(cut.file){
+  for(i in seq_along(cut.file)){
+    cut.file[[i]]$ALT_FREQ[which(cut.file[[i]]$TOTAL_DP < 1000)] <- "X"
+  }
+  return(cut.file)
+}
+
+nasal.cut <- lapply(nasal.cut, dp.relabel)
+saliva.cut <- lapply(saliva.cut,dp.relabel)
+
+#label alt_freq < 0.03 as 0 and alt_freq > 0.97 as 1
+freq.relabel <- function(cut.file){
+  for(i in seq_along(cut.file)){
+    for(j in seq_along(cut.file[[i]]$POS)){
+      if(cut.file[[i]]$ALT_FREQ[[j]] != "X"){
+        if(cut.file[[i]]$ALT_FREQ[[j]] < 0.03){
+          cut.file[[i]]$ALT_FREQ[[j]] <- 0
+        }
+        if(cut.file[[i]]$ALT_FREQ[[j]] > 0.97){
+          cut.file[[i]]$ALT_FREQ[[j]] <- 1
+        }
+      }
     }
   }
+  return(cut.file)
 }
-for(i in seq_along(saliva.files)){
-  for(j in seq_along(saliva.files[[i]])){
-    for(k in seq_along(saliva.files[[i]][[j]]$POS))
-      if(saliva.files[[i]][[j]]$DP[[k]] < 500){ 
-        saliva.files[[i]][[j]]$ALT_FREQ[[k]] <- "X"
-      }
-  }
-}
+
+nasal.cut <- lapply(nasal.cut, freq.relabel)
+saliva.cut <- lapply(saliva.cut, freq.relabel)
 
 #comparison tables
 env.comp <- function(nasal,saliva){
@@ -405,8 +299,8 @@ env.comp <- function(nasal,saliva){
 }
 comp.tables <- list()
 
-for(i in seq_along(nasal.files)){
-  comp.tables[[i]] <- env.comp(nasal.files[[i]],saliva.files[[i]])
+for(i in seq_along(nasal.cut)){
+  comp.tables[[i]] <- env.comp(nasal.cut[[i]],saliva.cut[[i]])
 }
 
 for(i in seq_along(comp.tables)){
@@ -421,7 +315,7 @@ for(i in seq_along(comp.tables)){
 comp.list <- list()
 for(i in seq_along(comp.tables)){
   comp.list[[i]] <- comp.tables[[i]] %>%
-    purrr::reduce(left_join, by=c("POS","REF","ALT","SNP"))
+    purrr::reduce(full_join, by=c("POS","REF","ALT","SNP")) #why was this left_join?
 }
 
 vec <- list()
@@ -436,7 +330,7 @@ for(i in seq_along(comp.list)){
   recols[[i]] <- paste0(recols[[i]],"_",vec2[[i]])
   colnames(comp.list[[i]])[-c(1:4)] <- recols[[i]]
 }
-names(comp.list) <- names(nasal.dirs)[-7]
+names(comp.list) <- names(nasal.dirs)
 
 #replace NA values (due to freq) with 0
 #replace X values (due to dp) with NA
@@ -446,6 +340,21 @@ for(i in seq_along(comp.list)){
   comp.list[[i]][comp.list[[i]]=="X"] <- NA
 }
 
+#remove consensus variants 
+remove.consensus <- function(user){
+  info <- user[,1:4]
+  freqs <- user[,grep("FREQ",colnames(user))]
+  for(i in seq_along(rownames(freqs))){
+    if(all(freqs[i,] > .97 | is.na(freqs[i,]))){
+      freqs[i,] <- "X"
+    }
+  }
+  final <- cbind(info,freqs)
+  final <- final %>%
+    filter(NASAL_FREQ_1 != "X" | is.na(NASAL_FREQ_1))
+  return(final)
+}
+comp.list <- lapply(comp.list,remove.consensus)
 
 #match NA values between environments
 freq1 <- function(comptable){
@@ -514,114 +423,25 @@ freq6 <- function(comptable){
   }
   return(comptable)
 } 
-freq7 <- function(comptable){
-  for(i in seq_along(comptable$POS)){
-    if(is.na(comptable$NASAL_FREQ_7[[i]])){
-      comptable$SALIVA_FREQ_7[[i]] <- NA
-    }
-    if(is.na(comptable$SALIVA_FREQ_7[[i]])){
-      comptable$NASAL_FREQ_7[[i]] <- NA
-    }
+
+freqlist <- c(freq1,freq2,freq3,freq4,freq5,freq6)
+
+na.match <- function(complist,filelist){
+  for(i in seq_along(filelist)){
+    complist <- freqlist[[i]](complist)
   }
-  return(comptable)
+  return(complist)
 }
-
-#432686
-comp.list$user_432686 <- freq1(comp.list$user_432686)
-comp.list$user_432686 <- freq2(comp.list$user_432686)
-comp.list$user_432686 <- freq3(comp.list$user_432686)
-#433227
-comp.list$user_433227 <- freq1(comp.list$user_433227)
-comp.list$user_433227 <- freq2(comp.list$user_433227)
-comp.list$user_433227 <- freq3(comp.list$user_433227)
-comp.list$user_433227 <- freq4(comp.list$user_433227)
-#438577
-comp.list$user_438577 <- freq1(comp.list$user_438577)
-comp.list$user_438577 <- freq2(comp.list$user_438577)
-comp.list$user_438577 <- freq3(comp.list$user_438577)
-comp.list$user_438577 <- freq4(comp.list$user_438577)
-#442978
-comp.list$user_442978 <- freq1(comp.list$user_442978)
-comp.list$user_442978 <- freq2(comp.list$user_442978)
-comp.list$user_442978 <- freq3(comp.list$user_442978)
-comp.list$user_442978 <- freq4(comp.list$user_442978)
-comp.list$user_442978 <- freq5(comp.list$user_442978)
-#444332
-comp.list$user_444332 <- freq1(comp.list$user_444332)
-comp.list$user_444332 <- freq2(comp.list$user_444332)
-comp.list$user_444332 <- freq3(comp.list$user_444332)
-comp.list$user_444332 <- freq4(comp.list$user_444332)
-comp.list$user_444332 <- freq5(comp.list$user_444332)
-comp.list$user_444332 <- freq6(comp.list$user_444332)
-#444633
-comp.list$user_444633 <- freq1(comp.list$user_444633)
-comp.list$user_444633 <- freq2(comp.list$user_444633)
-comp.list$user_444633 <- freq3(comp.list$user_444633)
-comp.list$user_444633 <- freq4(comp.list$user_444633)
-comp.list$user_444633 <- freq5(comp.list$user_444633)
-#451152
-comp.list$user_451152 <- freq1(comp.list$user_451152)
-comp.list$user_451152 <- freq2(comp.list$user_451152)
-comp.list$user_451152 <- freq3(comp.list$user_451152)
-comp.list$user_451152 <- freq4(comp.list$user_451152)
-comp.list$user_451152 <- freq5(comp.list$user_451152)
-#451709
-comp.list$user_451709 <- freq1(comp.list$user_451709)
-comp.list$user_451709 <- freq2(comp.list$user_451709)
-comp.list$user_451709 <- freq3(comp.list$user_451709)
-comp.list$user_451709 <- freq4(comp.list$user_451709)
-comp.list$user_451709 <- freq5(comp.list$user_451709)
-#453058
-comp.list$user_453058 <- freq1(comp.list$user_453058)
-comp.list$user_453058 <- freq2(comp.list$user_453058)
-comp.list$user_453058 <- freq3(comp.list$user_453058)
-#459597
-comp.list$user_459597 <- freq1(comp.list$user_459597)
-comp.list$user_459597 <- freq2(comp.list$user_459597)
-comp.list$user_459597 <- freq3(comp.list$user_459597)
-comp.list$user_459597 <- freq4(comp.list$user_459597)
-#471467
-comp.list$user_471467 <- freq1(comp.list$user_471467)
-comp.list$user_471467 <- freq2(comp.list$user_471467)
-comp.list$user_471467 <- freq3(comp.list$user_471467)
-comp.list$user_471467 <- freq4(comp.list$user_471467)
-comp.list$user_471467 <- freq5(comp.list$user_471467)
-#471588
-comp.list$user_471588 <- freq1(comp.list$user_471588)
-comp.list$user_471588 <- freq2(comp.list$user_471588)
-comp.list$user_471588 <- freq3(comp.list$user_471588)
-#475670
-comp.list$user_475670 <- freq1(comp.list$user_475670)
-comp.list$user_475670 <- freq2(comp.list$user_475670)
-comp.list$user_475670 <- freq3(comp.list$user_475670)
-
-#remove consensus variants
-remove.consensus <- function(user){
-  info <- user[,1:4]
-  freqs <- user[,grep("FREQ",colnames(user))]
-  for(i in seq_along(rownames(freqs))){
-    if(all(freqs[i,] > .97 | is.na(freqs[i,]))){
-      freqs[i,] <- "X"
-    }
-  }
-  final <- cbind(info,freqs)
-  final <- final %>%
-    filter(NASAL_FREQ_1 != "X" | is.na(NASAL_FREQ_1))
-  return(final)
-}
-comp.list <- lapply(comp.list,remove.consensus)
-
-save(comp.list, file = "comparison_list.RData")
-
-#replace NA with NaN (to read into matlab)
 for(i in seq_along(comp.list)){
-  comp.list[[i]][is.na(comp.list[[i]])] <- NaN
+  comp.list[[i]] <- na.match(comp.list[[i]], nasal.files[[i]])
 }
 
 filenames <- paste0("comparison_tables/",names(comp.list),".csv")
 for(i in seq_along(comp.list)){
   write.csv(comp.list[[i]],filenames[[i]])
 }
+
+save(comp.list, file = "comparison_list.RData")
 
 #frequency comparisons
 freq.comp <- function(user){
@@ -639,50 +459,8 @@ unlist.comp <- lapply(comp.list,freq.comp)
 unlist.comp <- bind_rows(unlist.comp)
 write.csv(unlist.comp,"nasal_saliva_freqs.csv")
 
-#distribution of saliva iSNVs missing from nasal
-load("comparison_list_unfiltered.RData") #version without frequency thresholds
-missing.distribution <- function(user){
-  saliva.only <- user[,grep("SALIVA",colnames(user))]
-  nasal.only <- user[,grep("NASAL",colnames(user))]
-  for(i in seq_along(colnames(saliva.only))){
-    saliva.only[,i] <- coalesce(saliva.only[,i],"X")
-    nasal.only[,i] <- coalesce(nasal.only[,i],"X")
-  }
-  
-  dis.matrix <- as.data.frame(matrix(nrow = nrow(saliva.only), 
-                                     ncol = ncol(saliva.only),
-                                     data = NA))
-  colnames(dis.matrix) <- colnames(saliva.only)
-  
-  
-  for(i in seq_along(rownames(saliva.only))){
-    for(j in seq_along(colnames(saliva.only))){
-      if(nasal.only[i,j] == 0){
-        dis.matrix[i,j] <- saliva.only[i,j]
-      }
-    }
-  }
-  dis.vec <- na.omit(as.numeric(unlist(flatten(dis.matrix))))
-  return(dis.vec)
-}
 
-distributions <- lapply(comp.list,missing.distribution)
-distributions <- unlist(distributions)
-distributions <- as.data.frame(distributions)
-quantile(distributions$distributions)
 
-ggplot(distributions, aes(x = distributions))+
-  geom_histogram(aes(y=stat(density)), bins =100)+
-  geom_density()+
-  geom_vline(xintercept = 0.03, color = "red")+
-  xlab("Frequency")+
-  ylab("Density")+
-  ggtitle("Frequency distribution of saliva iSNVs \nmissing from nasal compartment")+
-  theme_bw()+
-  theme(axis.title = element_text(size = 22),
-          axis.text = element_text(size = 19),
-          plot.title = element_text(size = 22))
-ggsave("figs/saliva_distribution.png")
 
 
 
