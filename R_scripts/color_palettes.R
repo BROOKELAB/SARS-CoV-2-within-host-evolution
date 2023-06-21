@@ -1,0 +1,15 @@
+
+#gradient from purple to yellow
+two.palette <- c("#9D6A90","#C8AF46")
+three.palette <- c("#9D6A90","#27A59B","#C8AF46")
+four.palette <- c("#9D6A90","#4795AE","#52AF79","#C8AF46")
+five.palette <- c("#9D6A90","#618BAF","#27A59B","#6EB267","#C8AF46")
+six.palette <- c("#9D6A90","#7085AD","#339CA9","#3CAC88","#80B35C","#C8AF46")
+seven.palette <- c("#9D6A90","#7A80AA","#4795AE","#27A59B","#52AF79","#8CB356","#C8AF46")
+eight.palette <- c("#9D6A90","#807DA7","#5690AF","#2C9FA6","#34AA8D","#62B16E","#94B352","#C8AF46")
+nine.palette <- c("#9D6A90","#857BA5","#618BAF","#3A9AAB","#27A59B","#44AD82","#6EB267","#9BB24F","#C8AF46")
+ten.palette <- c("#9D6A90","#8879A3","#6A88AE","#4795AE","#29A1A4","#30A991","#52AF79","#78B261","#A0B24E","#C8AF46")
+eleven.palette <- c("#9D6A90","#8B77A2","#7085AD","#5192AF","#339CA9","#27A59B","#3CAC88","#5DB071","#80B35C","#A4B24C","#C8AF46")
+twelve.palette <- c("#9D6A90","#8E759F","#7981AA","#618CAF","#4696AE","#2E9EA7","#27A59B","#37AB8B","#52AF79","#6FB267","#8CB356","#AAB24A","#C8AF46")
+thirteen.palette <- c("#9D6A90","#8E759F","#7981AA","#618CAF","#4696AE","#2E9EA7","#27A59B","#37AB8B","#52AF79","#6FB267","#8CB356","#AAB24A","#C8AF46")
+twenty.palette <- c("#9D6A90","#94719A","#8978A2","#7C7FA9","#6D86AD","#5D8DAF","#4C93AF","#3C99AC","#2E9EA7","#26A39F","#2AA796","#36AB8C","#46AE81","#58B075","#6AB269","#7CB25E","#8FB355","#A2B24D","#B5B148","#C8AF46")
