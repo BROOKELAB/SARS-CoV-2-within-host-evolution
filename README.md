@@ -185,6 +185,8 @@ All files required for analysis and all script outputs are stored in `SARS_data.
 	   * `FST_tables/` (.csv tables of within- and between-environment FST values for each individual, imported into prism to generate **Fig 4C**)
 	   * `FST_significance.csv` (significance values for comparisons of FSTs in within- vs. between-environment pairings)
 
+## 8. See global_data_analysis for code used to generate *Fig S10*
+
 ## Extras
  * `misc/SARS-CoV-2_samples.xlsx` and `misc/SRA_data.xlsx` contain raw sequence information and metadata
  * `all_saliva_user_info.xlsx` and `all_nasal_user_info.xlsx` contain dates of sampling and sample barcodes for saliva and nasal samples, respectively
