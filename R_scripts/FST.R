@@ -140,7 +140,9 @@ stat.matrix <- rbind(stat.matrix,total.matrix)
 
 write.csv(stat.matrix,"FST_significance.csv")
 
-t.test(all.nasal.fst, all.saliva.fst, alternative = "l", var.equal = F) #p-value = 4.333e-07
+t.test(all.nasal.fst, all.saliva.fst, alternative = "l", var.equal = F) 
+#mean nasal = 0.009653941 #mean saliva = 0.118295627
+#p-value = 0.0004491
 
 #heatmaps
 heatmap.matrix <- function(user,fstuser){
@@ -196,7 +198,7 @@ for(i in seq_along(FST.matrix)){
 names(FST.maps) <- names(FST.matrix)
 
 #451152 #453058 #459597
-ggpubr::ggarrange(FST.maps$`451152`,FST.maps$`433227`,FST.maps$`451709`,
+ggpubr::ggarrange(FST.maps$`451152`,FST.maps$`433227`,FST.maps$`438577`,
                   nrow = 1, ncol = 3)
 
 

@@ -27,64 +27,59 @@ run2 <- lapply((paste0("sequence_controls/",list.files("sequence_controls/",
                   import)
 names(run2) <- names(run1)
 
+#test correlation between iSNVs >0.03 freq and >1000 reads
+run1.cut <- lapply(run1, mutate, "SNP" = paste0(REF,POS,ALT))
+run1.cut <- lapply(run1.cut, filter, ALT_FREQ >= 0.03)
+run1.cut <- lapply(run1.cut, filter, TOTAL_DP >= 1000)
+run1.cut <- lapply(run1.cut, select, SNP, ALT_FREQ)
+run1.cut <- lapply(run1.cut, distinct)
+
+run2.cut <- lapply(run2, mutate, "SNP" = paste0(REF,POS,ALT))
+run2.cut <- lapply(run2.cut, filter, ALT_FREQ >= 0.03)
+run2.cut <- lapply(run2.cut, filter, TOTAL_DP >= 1000)
+run2.cut <- lapply(run2.cut, select, SNP, ALT_FREQ)
+run2.cut <- lapply(run2.cut, distinct)
+
+run.compare <- map2(run1.cut,run2.cut,full_join, by = "SNP")
+run.compare <- lapply(run.compare, distinct)
+run.cors <- list()
+for(i in seq_along(run.compare)){
+  run.compare[[i]][is.na(run.compare[[i]])] <- 0
+  colnames(run.compare[[i]])[c(2:3)] <- c("R1","R2")
+  run.cors[[i]] <- cor.test(run.compare[[i]]$R1, run.compare[[i]]$R2, method = "p")$estimate
+}
+run.cors <- unlist(run.cors)
+save(run.cors, file = "run_cors.RData") #will use for quality control in future analyses
+
 #test just shared from 444332
 #2415377 #2425945 #2436517 #2447784
 user.run1 <- list(run1$`2415377`, run1$`2421070`, run1$`2425945`,run1$`2436517`,run1$`2447784`)
-user.run1 <- lapply(user.run1, mutate,"SNP" = paste0(REF,POS,ALT))
+user.run1 <- lapply(user.run1, select, POS,REF,ALT,ALT_FREQ,TOTAL_DP)
 names(user.run1) <- c("2415377","2421070","2425945","2436517","2447784")
 
 user.run2 <- list(run2$`2415377`, run2$`2421070`, run2$`2425945`,run2$`2436517`,run2$`2447784`)
-user.run2 <- lapply(user.run2, mutate,"SNP" = paste0(REF,POS,ALT))
+user.run2 <- lapply(user.run2, select, POS,REF,ALT,ALT_FREQ,TOTAL_DP)
 names(user.run2) <- names(user.run1)
 
 #filter
 run.filter <- function(run){
   run <- run %>%
     filter(ALT_FREQ >= 0.03)%>%
-    filter(ALT_FREQ <= 0.97)%>%
-    filter(TOTAL_DP >= 1000)%>%
-    filter(POS != 6696)%>% #these are likely sequencing artifacts
-    filter(POS!= 11074)%>%
-    filter(POS != 15965)%>%
-    filter(POS!= 29051)%>%
-    filter(POS != 187) %>%
-    filter(POS != 1059) %>%
-    filter(POS != 2094) %>%
-    filter(POS != 3037) %>%
-    filter(POS != 3130) %>%
-    filter(POS != 6696) %>%
-    filter(POS != 6990) %>%
-    filter(POS != 8022) %>%
-    filter(POS != 10323) %>%
-    filter(POS != 10741) %>%
-    filter(POS != 11074) %>%
-    filter(POS != 13408) %>%
-    filter(POS != 14786) %>%
-    filter(POS != 19684) %>%
-    filter(POS != 20148) %>%
-    filter(POS != 21137) %>%
-    filter(POS != 24034) %>%
-    filter(POS != 24378) %>%
-    filter(POS != 25563) %>%
-    filter(POS != 26144) %>%
-    filter(POS != 26461) %>%
-    filter(POS != 26681) %>%
-    filter(POS != 28077) %>%
-    filter(POS != 28826) %>%
-    filter(POS != 28854) %>%
-    filter(POS != 29051) %>%
-    filter(POS != 29700) %>%
-    filter(POS != 29760) %>%
-    #mutate("SNP" = paste0(REF,POS,ALT))%>%
-    select(SNP,ALT_FREQ)
+    filter(TOTAL_DP >= 1000)
+  run <- run[-which(run$POS %in% c(6696,11074,15965,29051,187,1059,2094,3037,
+                                   3130,6696,6990,8022,10323,10741,11074,13408,
+                                   14786,19684,20148,21137,24034,24378,25563,26144,
+                                   26461,26681,28077,28826,28854,29051,29700,29760)),]
+  run <- run %>%
+    select(POS,REF,ALT,ALT_FREQ)
   return(run)
 }
 user.run1.filter <- lapply(user.run1,run.filter)
 user.run2.filter <- lapply(user.run2, run.filter)
 
 #intersect
-allpos.run1 <- lapply(user.run1.filter,select, SNP)
-allpos.run2 <- lapply(user.run2.filter,select, SNP)
+allpos.run1 <- lapply(user.run1.filter,select, POS,REF,ALT)
+allpos.run2 <- lapply(user.run2.filter,select, POS,REF,ALT)
 
 snp.intersect <- function(allpos){
   expand <- expand.grid(seq_along(allpos), seq_along(allpos))
@@ -102,6 +97,104 @@ snp.intersect <- function(allpos){
 
 intersect.run1 <- snp.intersect(allpos.run1)
 intersect.run2 <- snp.intersect(allpos.run2)
+
+varianttable <- function(intersectuser,everythinguser){
+  freq <- list()
+  for(i in 2:(length(everythinguser)+1)){
+    freq[[1]] <- intersectuser
+    freq[[i]] <- everythinguser[[i-1]]
+  }
+  joiner <- freq %>%
+    purrr::reduce(left_join, by=c("POS","REF","ALT"))%>%
+    distinct()
+  numvec <- 1:((dim(joiner)[[2]]-3) - ((dim(joiner)[[2]]-3)/2))
+  
+  numrep <- list()
+  for(i in 1:length(numvec)){
+    numrep[[i]]<- rep(numvec[[i]],2)
+  }
+  numrep <- unlist(numrep)
+  colrep <- rep(c("freq_","depth_"),length(numvec))
+  colnames(joiner) <- c("POS","REF","ALT",paste0(colrep,numrep))
+  
+  for(i in 1:dim(joiner)[[1]]){
+    for(j in 1:dim(joiner)[[2]]){
+      if(dim(joiner)[[1]] != 0){
+        if(strsplit(colnames(joiner)[[j]],"_")[[1]][1] == "depth"){
+          if((!is.na(joiner[i,j])) && (joiner[i,j]<1000)){
+            joiner[i,(j-1)] <- paste(joiner[i,(j-1)],"(low dp)")
+          }
+        }
+      }
+    }
+  }
+  
+  colvec <- strsplit(colnames(joiner),"_")
+  keepvec <- list()
+  for(i in 1:length(colvec)){
+    if(colvec[[i]][1]!= "depth"){
+      keepvec[[i]] <-i
+    }
+  }
+  keepvec <- keepvec[!sapply(keepvec,is.null)]
+  keepvec <- unlist(keepvec)
+  joiner <- joiner[,keepvec]
+  return(joiner)
+} 
+
+run1.table <- varianttable(intersect.run1, user.run1)
+run2.table <- varianttable(intersect.run2, user.run2)
+
+#replace NA with 0.01 
+NA_01 <- function(vartable){
+  if(dim(vartable)[[1]] != 0){
+    for(i in 1:length(vartable$POS)){
+      for(j in 1:length(colnames(vartable))){
+        if(is.na(vartable[i,j])){
+          vartable[i,j] <- 0.01
+        }
+      }
+    }
+  }
+  return(vartable)
+}
+run1.table <- NA_01(run1.table)
+run2.table <- NA_01(run2.table)
+
+#remove consensus variants
+remove.consensus <- function(user){
+  info <- user[,1:3]
+  freqs <- user[,grep("freq",colnames(user))]
+  keeps <- freqs
+  for(i in seq_along(rownames(keeps))){
+    for(j in seq_along(colnames(keeps))){
+      if(!identical(grep("(low dp)", keeps[i,j]),integer(0))){
+        keeps[i,j] <- 1
+      }
+      if(length(which(keeps[i,] < 0.97)) < 2){
+        keeps[i,] <- "X"
+      }
+    }
+  }
+  info <- info[which(keeps$freq_1 != "X"),]
+  freqs <- freqs[which(keeps$freq_1 != "X"),]
+  final <- cbind(info,freqs)
+  return(final)
+}
+
+run1.table <- remove.consensus(run1.table)
+run2.table <- remove.consensus(run2.table)
+
+#generate list of shared variants
+intersect.run1 <- run1.table[,c(1:3)] %>%
+  mutate("SNP" = paste0(REF,POS,ALT)) %>%
+  relocate(SNP, .before = POS)
+intersect.run2 <- run2.table[,c(1:3)] %>%
+  mutate("SNP" = paste0(REF,POS,ALT)) %>%
+  relocate(SNP, .before = POS)
+
+user.run1 <- lapply(user.run1, mutate, "SNP" = paste0(REF,POS,ALT))
+user.run2 <- lapply(user.run2, mutate, "SNP" = paste0(REF,POS,ALT))
 
 for(i in seq_along(user.run1)){
   user.run1[[i]] <- user.run1[[i]][which(user.run1[[i]]$SNP %in% intersect.run1$SNP),]
@@ -171,26 +264,26 @@ load("naive_intersecting.RData")
 naive.intersecting <- lapply(naive.intersecting, mutate, "SNP" = paste0(REF,POS,ALT))
 
 ct.run1$`2264562` <- ct.run1$`2264562`[which(ct.run1$`2264562`$SNP %in% 
-                                               naive.intersecting$`432870`$SNP),]
+                                               naive.intersecting$user_432870$SNP),]
 ct.run1$`2390233` <- ct.run1$`2390233` [which(ct.run1$`2390233`$SNP %in% 
-                                               naive.intersecting$`435786`$SNP),]
+                                               naive.intersecting$user_435786$SNP),]
 ct.run1$`2415388` <- ct.run1$`2415388` [which(ct.run1$`2415388`$SNP %in% 
-                                                naive.intersecting$`435805`$SNP),]
+                                                naive.intersecting$user_435805$SNP),]
 ct.run1$`2421070` <- ct.run1$`2421070` [which(ct.run1$`2421070`$SNP %in% 
-                                                naive.intersecting$`444332`$SNP),]
+                                                naive.intersecting$user_444332$SNP),]
 ct.run1$`2447896` <- ct.run1$`2447896` [which(ct.run1$`2447896`$SNP %in% 
-                                                naive.intersecting$`449650`$SNP),]
+                                                naive.intersecting$user_449650$SNP),]
 
 ct.run2$`2264562` <- ct.run2$`2264562`[which(ct.run2$`2264562`$SNP %in% 
-                                               naive.intersecting$`432870`$SNP),]
+                                               naive.intersecting$user_432870$SNP),]
 ct.run2$`2390233` <- ct.run2$`2390233` [which(ct.run2$`2390233`$SNP %in% 
-                                                naive.intersecting$`435786`$SNP),]
+                                                naive.intersecting$user_435786$SNP),]
 ct.run2$`2415388` <- ct.run2$`2415388` [which(ct.run2$`2415388`$SNP %in% 
-                                                naive.intersecting$`435805`$SNP),]
+                                                naive.intersecting$user_435805$SNP),]
 ct.run2$`2421070` <- ct.run2$`2421070` [which(ct.run2$`2421070`$SNP %in% 
-                                                naive.intersecting$`444332`$SNP),]
+                                                naive.intersecting$user_444332$SNP),]
 ct.run2$`2447896` <- ct.run2$`2447896` [which(ct.run2$`2447896`$SNP %in% 
-                                                naive.intersecting$`449650`$SNP),]
+                                                naive.intersecting$user_449650$SNP),]
 
 ct.run1 <- lapply(ct.run1,select,SNP,ALT_FREQ)
 ct.run2 <- lapply(ct.run2, select,SNP,ALT_FREQ)
@@ -208,23 +301,55 @@ for(i in seq_along(ct.run1)){
   ct.table[[i]] <- distinct(ct.table[[i]])
   ct.table[[i]][is.na(ct.table[[i]])] <- 0
 }
+ct.table[[1]] <- ct.table[[1]] %>%
+  mutate("PARTICIPANT" = 432870)%>%
+  mutate("DAY" = 1)%>%
+  relocate(DAY, .before = Ct)%>%
+  relocate(PARTICIPANT, .before = DAY)
+ct.table[[2]] <- ct.table[[2]] %>%
+  mutate("PARTICIPANT" = 435786)%>%
+  mutate("DAY" = 3)%>%
+  relocate(DAY, .before = Ct)%>%
+  relocate(PARTICIPANT, .before = DAY)
+ct.table[[3]] <- ct.table[[3]] %>%
+  mutate("PARTICIPANT" = 435805)%>%
+  mutate("DAY" = 9) %>%
+  relocate(DAY, .before = Ct)%>%
+  relocate(PARTICIPANT, .before = DAY)
+ct.table[[4]] <- ct.table[[4]] %>%
+  mutate("PARTICIPANT" = 444332) %>%
+  mutate("DAY" = 2)%>%
+  relocate(DAY, .before = Ct)%>%
+  relocate(PARTICIPANT, .before = DAY)
+ct.table[[5]] <- ct.table[[5]] %>%
+  mutate("PARTICIPANT" = 449650) %>%
+  mutate("DAY" = 1)%>%
+  relocate(DAY, .before = Ct)%>%
+  relocate(PARTICIPANT, .before = DAY)
 
 ct.all <- as.data.frame(bind_rows(ct.table))
 ct.all$Ct <- as.double(ct.all$Ct)
-ct.all <- ct.all %>%
-  arrange(Ct, desc = T) %>%
-  mutate("PARTICIPANT" = c(432870,432870,449650,449650,435786,435805,435805)) %>%
-  relocate(PARTICIPANT, .before = Ct) %>%
-  mutate("DAY" = c(1,1,1,1,3,9,9)) %>%
-  relocate(DAY, .after = PARTICIPANT)
-cor.test(ct.all$RUN1, ct.all$RUN2, method = "p") #cor = 0.8419865, p = 0.01747
+ct.all <- arrange(ct.all, Ct, desc = T)
+cor.test(ct.all$RUN1, ct.all$RUN2, method = "p") 
+#cor = 0.9966904, p-value < 2.2e-16
 export(ct.all, file = "runcontrol_ct.csv")
 
-user.table.cut <- user.table[,-2]
-ct.all.cut <- ct.all[,-c(1:3)]
-runcontrol <- bind_rows(user.table.cut,ct.all.cut)
-cor.test(runcontrol$RUN1, runcontrol$RUN2) #cor = 0.847303 #p = 0.0009929
+#filter out high freq and low freq
+ct.all.filter <- ct.all %>%
+  filter(RUN1 > 0.03 | RUN2 > 0.03) %>%
+  filter(RUN1 < 0.97 | RUN2 < 0.97)
+cor.test(ct.all.filter$RUN1, ct.all.filter$RUN2, method = "p")
+#cor = 0.8287419 #p = 0.04148
+
+#combine
+ct.all.filter <- ct.all.filter[,-c(1:3)]
+user.table <- user.table[,-2]
+runcontrol <- bind_rows(ct.all.filter, user.table)
+cor.test(runcontrol$RUN1, runcontrol$RUN2, method = "p")
+#cor = 0.833268 #p = 0.00275
 save(runcontrol, file = "runcontrol.RData")
+
+
 
 
 

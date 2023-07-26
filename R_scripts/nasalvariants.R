@@ -1,97 +1,120 @@
 library(tidyverse)
 library(rio)
 library(rlist)
+library(Nmisc)
 library(gdata)
 library(gtools)
 library(here)
 
+#load iVar and SnpEff files
 nasal.dirs <- list.dirs("nasal_output_tables")[-c(1,2)]
-nasal.dirs26 <- list.dirs("nasal_output_tables_cut26")[-c(1:3)]
 names(nasal.dirs) <- c("user_432686","user_433227","user_438577","user_442978",
                        "user_444332","user_444633","user_450241","user_451152",
                        "user_451709","user_453058","user_459597","user_471467",
-                       "user_471588","user_475670")
-nasal.read <- function(dir){
-  full <- paste0(dir,"/",list.files(dir, pattern = "ivar"))
-  full <- mixedsort(sort(full)) #need this so it reads in date order
-  files <- lapply(full, read.table,sep="\t",header =T)
-  files <- lapply(files, select, POS,REF,ALT,ALT_FREQ,TOTAL_DP)
-  return(files)
-}
-nasal.files <- lapply(nasal.dirs26, nasal.read)
-nasal.files.uncut <- lapply(nasal.dirs, nasal.read)
+                       "user_471588")
 
-sleekuser.nas <- list()
-sleekuser.nas.uncut <- list()
-nasal.sleek <- function(file){
-  file <- file %>%
-    filter(ALT_FREQ >= 0.03)%>%
-    filter(ALT_FREQ <= 0.97)%>%
-    filter(TOTAL_DP >= 1000)%>% 
-    filter(POS != 6696)%>% #these are likely sequencing artifacts
-    filter(POS!= 11074)%>%
-    filter(POS != 15965)%>%
-    filter(POS!= 29051)%>%
-    filter(POS != 187) %>%
-    filter(POS != 1059) %>%
-    filter(POS != 2094) %>%
-    filter(POS != 3037) %>%
-    filter(POS != 3130) %>%
-    filter(POS != 6696) %>%
-    filter(POS != 6990) %>%
-    filter(POS != 8022) %>%
-    filter(POS != 10323) %>%
-    filter(POS != 10741) %>%
-    filter(POS != 11074) %>%
-    filter(POS != 13408) %>%
-    filter(POS != 14786) %>%
-    filter(POS != 19684) %>%
-    filter(POS != 20148) %>%
-    filter(POS != 21137) %>%
-    filter(POS != 24034) %>%
-    filter(POS != 24378) %>%
-    filter(POS != 25563) %>%
-    filter(POS != 26144) %>%
-    filter(POS != 26461) %>%
-    filter(POS != 26681) %>%
-    filter(POS != 28077) %>%
-    filter(POS != 28826) %>%
-    filter(POS != 28854) %>%
-    filter(POS != 29051) %>%
-    filter(POS != 29700) %>%
-    filter(POS != 29760) %>%
-    distinct()
-  return(file)
-} #contains depth and frequency cutoffs
-for(i in seq_along(nasal.files)){
-  sleekuser.nas[[i]] <- lapply(nasal.files[[i]],nasal.sleek)
-  sleekuser.nas.uncut[[i]] <- lapply(nasal.files.uncut[[i]],nasal.sleek)
-}
-names(sleekuser.nas) <- names(nasal.dirs)
-names(sleekuser.nas.uncut) <- names(sleekuser.nas)
-everythinguser.nas <- nasal.files.uncut
-
-#count number of SNPs for each user
-snpcount <- function(user){
-  snplength <-list()
-  for (i in seq_along(user)){
-    snplength[[i]] <- length(user[[i]]$POS)
+sleek <- function(dir){
+  files <- list.files(dir,pattern = "ivar")
+  files <- gtools::mixedsort(sort(files))
+  full <- paste0(dir,"/",files)
+  user <- list()
+  for(i in 1:length(full)){
+    user[[i]] <- import(full[i])
   }
-  return(snplength)
-}
-snpcounts.nas <- lapply(sleekuser.nas.uncut,snpcount)
+  sleekuser <- list()
+  for(i in 1:length(user)){
+    sleekuser[[i]] <- user[[i]] %>%
+      filter(ALT_FREQ>=.03)%>%
+      filter(TOTAL_DP >=1000)%>%
+      select(POS,REF,ALT,ALT_DP,TOTAL_DP,ALT_FREQ)%>%
+      distinct()
+    artifacts <- c(6696,11074,15965,29051,187,1059,2094,3037,
+                   3130,6696,6990,8022,10323,10741,11074,13408,
+                   14786,19684,20148,21137,24034,24378,25563,26144,
+                   26461,26681,28077,28826,28854,29051,29700,29760)
+    if(!identical(which(sleekuser[[i]]$POS %in% artifacts), integer(0))){
+      sleekuser[[i]] <- sleekuser[[i]][-which(sleekuser[[i]]$POS %in% artifacts),]
+    }
+  }
+  return(sleekuser)
+} #POS,REF,ALT,ALT_DP,REF_DP,ALT_FREQ + data thresholds
+everything <- function(dir){
+  files <- list.files(dir,pattern = "ivar")
+  files <- gtools::mixedsort(sort(files))
+  full <- paste0(dir,"/",files)
+  user <- list()
+  for(i in 1:length(full)){
+    user[[i]] <- import(full[i])
+  }
+  everythinguser <- list()
+  for(i in 1:length(user)){
+    everythinguser[[i]] <- user[[i]] %>%
+      select(POS,REF,ALT,ALT_FREQ,TOTAL_DP)%>%
+      distinct()
+  }
+  return(everythinguser)
+} #POS,REF,ALT,ALT_FREQ,TOTAL_DP + no thresholds
 
-snpcounts.nas.table <- data.frame(matrix(ncol = 14,nrow = 9))
-rownames(snpcounts.nas.table) <- paste("time point",1:9)
-colnames(snpcounts.nas.table) <- names(nasal.dirs)
-for(i in seq_along(snpcounts.nas)){
-  for(j in seq_along(snpcounts.nas[[i]])){
-    snpcounts.nas.table[j,i] <- snpcounts.nas[[i]][[j]]
+sleekuser.nas <- lapply(nasal.dirs,sleek)
+everythinguser.nas <- lapply(nasal.dirs,everything)
+
+#remove samples with low overall coverage
+load("nasal_depth_files.RData")
+
+rm.coverage <- function(user,depth){
+  names(user) <- names(depth)
+  if(length(which(flatten(depth) < 1000)) > 0){
+    user <- user[-c(which(flatten(depth) < 1000))]
+  }
+  return(user)
+}
+
+sleekuser.nas <- map2(sleekuser.nas,nasal.depth.files,rm.coverage)
+everythinguser.nas <- map2(everythinguser.nas,nasal.depth.files,rm.coverage)
+
+#remove samples with low Ct
+nasal.ct <- import("all_nasal_user_info.xlsx")
+nasal.ct <- nasal.ct %>%
+  filter(user_ID %in% gsub("user_","",names(sleekuser.nas)))%>%
+  arrange(user_ID) %>%
+  mutate("sample" = NA) %>%
+  select(user_ID,sample,sample_date,cn)
+
+dates <- nasal.ct$sample_date
+dates <- format(dates,"%m-%d-%Y")
+dates <- as.character(dates)
+m <- str_split(dates, "-") %>% map_chr(`[`, 1)
+m <- gsub("0","",m)
+d <- str_split(dates, "-") %>% map_chr(`[`, 2)
+d1 <- gsub("0","",substr(d,1,1))
+d2 <- substr(d,2,2)
+y <- str_split(dates, "-") %>% map_chr(`[`, 3)
+y2 <- substr(y,3,4)
+re.dates <- paste0(m,"_",d1,d2,"_",y2)
+nasal.ct$sample <- paste0(nasal.ct$user_ID,"_",re.dates)
+
+nasal.ct <- nasal.ct %>%
+  group_by(user_ID, .add = TRUE) %>%
+  group_split()
+names(nasal.ct) <- names(sleekuser.nas)
+sleekuser.nas.uncut <- sleekuser.nas
+
+
+rm.vec.ct <- function(user,ct){
+  ct <- filter(ct, sample %in% names(user))
+  vec <- which(ct$cn >= 26)
+  return(vec)
+}
+
+nasal.vec.ct <- map2(sleekuser.nas,nasal.ct, rm.vec.ct)
+
+for(i in seq_along(nasal.vec.ct)){
+  if(length(nasal.vec.ct[[i]]) != 0){
+    sleekuser.nas[[i]] <- sleekuser.nas[[i]][-c(nasal.vec.ct[[i]])]
+  } else {
+    sleekuser.nas[[i]] <- sleekuser.nas[[i]]
   }
 }
-
-save(snpcounts.nas.table, file = "snpcounts_nas.RData")
-write.csv(snpcounts.nas.table,"nasal_snpcounts.csv")
 
 #pull out SNP positions
 positions <- function(sleekuser){
@@ -103,21 +126,9 @@ positions <- function(sleekuser){
   return(allpos)
 }
 allpos.nas <- lapply(sleekuser.nas,positions)
-allpos.nas.uncut <- lapply(sleekuser.nas.uncut, positions)
+allpos.nas.uncut <- lapply(sleekuser.nas.uncut,positions)
 
-keepunique <- function(pos){
-  splat <- list.rbind(pos)
-  unique  <- distinct(splat)
-  return(unique)
-}
-uniqueSNPs.nas <- list()
-uniquecounts.nas <- list()
-for(i in seq_along(allpos.nas)){
-  uniqueSNPs.nas[[i]] <- keepunique(allpos.nas.uncut[[i]])
-  uniquecounts.nas[[i]] <- length(uniqueSNPs.nas[[i]]$POS)
-}
-
-#pull out intersecting variants
+#pull out intersecting iSNVs
 snp.intersect <- function(allpos){
   expand <- expand.grid(seq_along(allpos), seq_along(allpos))
   expand <- expand[,c("Var2","Var1")]
@@ -135,10 +146,8 @@ snp.intersect <- function(allpos){
 nasal.intersecting <- lapply(allpos.nas,snp.intersect)
 nasal.intersecting <- lapply(nasal.intersecting,arrange,POS)
 
-save(nasal.intersecting,file = "nasal_intersecting.RData")
-
-#create variant tables
-varianttable <-function(intersectuser,everythinguser){
+#create variant tables to track shared iSNV frequencies over time
+varianttable <- function(intersectuser,everythinguser){
   freq <- list()
   for(i in 2:(length(everythinguser)+1)){
     freq[[1]] <- intersectuser
@@ -181,13 +190,14 @@ varianttable <-function(intersectuser,everythinguser){
   joiner <- joiner[,keepvec]
   return(joiner)
 } 
+
 nasal.vartables <- list()
 for(i in seq_along(nasal.intersecting)){
   nasal.vartables[[i]] <- varianttable(nasal.intersecting[[i]],everythinguser.nas[[i]])
 }
 names(nasal.vartables) <- names(sleekuser.nas)
 
-#replace NA with 0.01
+#replace NA with 0.01 (for plotting on log scale)
 NA_01 <- function(vartable){
   if(dim(vartable)[[1]] != 0){
     for(i in 1:length(vartable$POS)){
@@ -202,12 +212,56 @@ NA_01 <- function(vartable){
 }
 nasal.vartables <- lapply(nasal.vartables,NA_01)
 
-#reformat to REF-POS-ALT SNP notation
+#remove consensus variants
+remove.consensus <- function(user){
+  info <- user[,1:3]
+  freqs <- user[,grep("freq",colnames(user))]
+  keeps <- freqs
+  for(i in seq_along(rownames(keeps))){
+    for(j in seq_along(colnames(keeps))){
+      if(!identical(grep("(low dp)", keeps[i,j]),integer(0))){
+        keeps[i,j] <- 1
+      }
+      if(length(which(keeps[i,] < 0.97)) < 2){
+        keeps[i,] <- "X"
+      }
+    }
+  }
+  info <- info[which(keeps$freq_1 != "X"),]
+  freqs <- freqs[which(keeps$freq_1 != "X"),]
+  final <- cbind(info,freqs)
+  return(final)
+}
+nasal.vartables <- lapply(nasal.vartables, remove.consensus)
+
+#generate list of shared variants
+nasal.intersecting <- list()
+for(i in seq_along(nasal.vartables)){
+  nasal.intersecting[[i]] <- nasal.vartables[[i]][,c(1:3)]
+}
+names(nasal.intersecting) <- paste0("user_",names(sleekuser.nas))
+save(nasal.intersecting, file = "nasal_intersecting.RData")
+
+#reformat SNP notation with no +/-'s (eg. REF = C, ALT= +T --> REF = C, ALT = CT)
+for(i in seq_along(nasal.vartables)){
+  for(j in seq_along(nasal.vartables[[i]]$ALT)){
+    if(substr(nasal.vartables[[i]]$ALT[[j]],0,1)=="+"){
+      nasal.vartables[[i]]$ALT[[j]] <- paste0(nasal.vartables[[i]]$REF[[j]], 
+                                              substr(nasal.vartables[[i]]$ALT[[j]],2,nchar(nasal.vartables[[i]]$ALT[[j]])))
+    }
+    if(substr(nasal.vartables[[i]]$ALT[[j]],0,1)=="-"){
+      nasal.vartables[[i]]$REF[[j]] <- paste0(nasal.vartables[[i]]$REF[[j]],
+                                              substr(nasal.vartables[[i]]$ALT[[j]],2,nchar(nasal.vartables[[i]]$ALT[[j]])))
+      nasal.vartables[[i]]$ALT[[j]] <- substr(nasal.vartables[[i]]$REF[[j]],0,1)
+    }
+  }
+}
+
+#reformat variant plots to REF-POS-ALT SNP notation
 for(i in seq_along(nasal.vartables)){
   for(j in seq_along(nasal.vartables[[i]]$POS)){
     nasal.vartables[[i]]$POS[[j]] <- paste0(nasal.vartables[[i]]$REF[[j]], 
-                                            nasal.vartables[[i]]$POS[[j]], 
-                                            nasal.vartables[[i]]$ALT[[j]])
+                                            nasal.vartables[[i]]$POS[[j]], nasal.vartables[[i]]$ALT[[j]])
   }
 }
 
@@ -224,14 +278,87 @@ for(i in seq_along(nasal.vartables)){
   colnames(nasal.vartables[[i]]) <- nasal.vartables[[i]][1,]
 }
 
-
-#write csvs
+#write csvs for variant frequency tracking tables
 for(i in seq_along(nasal.vartables)){
   filenames <- paste0("nasal_variant_tables/",names(nasal.vartables),".csv")
   write.csv(nasal.vartables[[i]],filenames[[i]])
 }
 
+#count shared iSNVs present on each day
+shared.lengths <- function(all,intersecting){
+  subset <- list()
+  subset.lengths <- list()
+  for(i in seq_along(all)){
+    subset[[i]] <- which(all[[i]]$POS %in% intersecting$POS)
+    subset.lengths[[i]] <- length(subset[[i]])
+  }
+  subset.lengths <- unlist(subset.lengths)
+  return(subset.lengths)
+}
+nasal.daily.shared <- map2(allpos.nas.uncut, nasal.intersecting, shared.lengths)
+save(nasal.daily.shared, file = "nasal_daily_shared.RData")
 
+#count the total number of shared iSNVs for each user
+nasal.intersect.lengths <- vector(mode = "list", length = length(nasal.intersecting))
+for(i in seq_along(nasal.intersecting)){
+  nasal.intersect.lengths[[i]] <- length(nasal.intersecting[[i]]$POS)
+}
+names(nasal.intersect.lengths) <- names(nasal.daily.shared)
 
+#count iSNVs that do NOT appear more than once within users
+unique.lengths <- function(user, intersecting){
+  unique <- list()
+  lengths <- list()
+  for(i in seq_along(user)){
+    user[[i]] <- user[[i]] %>%
+      mutate("SNP" = paste0(REF,POS,ALT)) %>%
+      filter(ALT_FREQ <= 0.97)
+    intersecting <-  mutate(intersecting, "SNP" = paste0(REF,POS,ALT))
+    if(dim(intersecting)[[1]] > 0){
+      unique[[i]] <- user[[i]][-which(user[[i]]$SNP %in% intersecting$SNP),]
+    } else {
+      unique[[i]] <- user[[i]]
+    }
+    lengths[[i]] <- length(unique[[i]]$POS)
+  }
+  lengths <- unlist(lengths)
+  return(lengths)
+}
+nasal.daily.unique <- map2(sleekuser.nas.uncut, nasal.intersecting, unique.lengths)
 
+keep.unique <- function(user, intersecting){
+  unique <- list()
+  for(i in seq_along(user)){
+    user[[i]] <- user[[i]] %>%
+      mutate("SNP" = paste0(REF,POS,ALT)) %>%
+      filter(ALT_FREQ <= 0.97)
+    intersecting <-  mutate(intersecting, "SNP" = paste0(REF,POS,ALT))
+    if(dim(intersecting)[[1]] > 0){
+      unique[[i]] <- user[[i]][-which(user[[i]]$SNP %in% intersecting$SNP),]
+    } else {
+      unique[[i]] <- user[[i]]
+    }
+  }
+  unique <- bind_rows(unique)
+  count <- length(unique$POS)
+  return(count)
+}
+
+nasal.unique.counts <- map2(sleekuser.nas.uncut, nasal.intersecting, keep.unique)
+nasal.unique.counts <- unlist(nasal.unique.counts)
+
+#count number of SNPs for each user on each day
+nasal.daily.counts <- map2(nasal.daily.shared, nasal.daily.unique, ~.x+.y)
+nasal.info <- import("all_nasal_user_info.xlsx")
+nasal.info <- nasal.info %>%
+  select(user_ID,day_of_infection)
+nasal.snpcounts <- bind_cols(nasal.info,
+                             unlist(nasal.daily.shared),
+                             unlist(nasal.daily.counts))
+
+colnames(nasal.snpcounts)[3] <- "shared_SNPs"
+colnames(nasal.snpcounts)[4] <- "total_SNPs"
+
+save(nasal.snpcounts, file = "nasal_snpcounts.RData")
+write.csv(nasal.snpcounts,"nasal_snpcounts.csv")
 
