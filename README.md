@@ -29,9 +29,9 @@ All files required for analysis and all script outputs are stored in `SARS_data.
 ## 1. Identifying samples with low coverage
 1. Run coverage.R
    * Folders and files required:
-   	* `naive_depths/`
-   	* `vax_depths/`
-   	* `nasal_depths`	 
+   		* `naive_depths/`
+   		* `vax_depths/`
+   		* `nasal_depths`	 
        
       			
    
