@@ -1,14 +1,14 @@
 library(tidyverse)
 library(rio)
 library(rlist)
+library(Nmisc)
 library(gdata)
 library(gtools)
 library(here)
 
+#load iVar and SnpEff files
 dirlist <- list.dirs("naive_output_tables")[-c(1:3)]
-dirlist26 <- list.dirs("naive_output_tables_cut26")[-c(1:4)]
 
-#pare down data to necessary elements
 sleek <- function(dir){
   files <- list.files(dir,pattern = "ivar")
   files <- gtools::mixedsort(sort(files))
@@ -20,42 +20,17 @@ sleek <- function(dir){
   sleekuser <- list()
   for(i in 1:length(user)){
     sleekuser[[i]] <- user[[i]] %>%
-      filter(ALT_FREQ>=.03,ALT_FREQ<=.97)%>%
-      filter(ALT_DP + REF_DP >=1000)%>%
-      filter(POS != 6696)%>% #these are likely sequencing artifacts
-      filter(POS!= 11074)%>%
-      filter(POS != 15965)%>%
-      filter(POS!= 29051)%>%
-      filter(POS != 187) %>%
-      filter(POS != 1059) %>%
-      filter(POS != 2094) %>%
-      filter(POS != 3037) %>%
-      filter(POS != 3130) %>%
-      filter(POS != 6696) %>%
-      filter(POS != 6990) %>%
-      filter(POS != 8022) %>%
-      filter(POS != 10323) %>%
-      filter(POS != 10741) %>%
-      filter(POS != 11074) %>%
-      filter(POS != 13408) %>%
-      filter(POS != 14786) %>%
-      filter(POS != 19684) %>%
-      filter(POS != 20148) %>%
-      filter(POS != 21137) %>%
-      filter(POS != 24034) %>%
-      filter(POS != 24378) %>%
-      filter(POS != 25563) %>%
-      filter(POS != 26144) %>%
-      filter(POS != 26461) %>%
-      filter(POS != 26681) %>%
-      filter(POS != 28077) %>%
-      filter(POS != 28826) %>%
-      filter(POS != 28854) %>%
-      filter(POS != 29051) %>%
-      filter(POS != 29700) %>%
-      filter(POS != 29760) %>%
-      select(POS,REF,ALT,ALT_DP,REF_DP,ALT_FREQ)%>%
+      filter(ALT_FREQ>=.03)%>%
+      filter(TOTAL_DP >=1000)%>%
+      select(POS,REF,ALT,ALT_DP,TOTAL_DP,ALT_FREQ)%>%
       distinct()
+    artifacts <- c(6696,11074,15965,29051,187,1059,2094,3037,
+                   3130,6696,6990,8022,10323,10741,11074,13408,
+                   14786,19684,20148,21137,24034,24378,25563,26144,
+                   26461,26681,28077,28826,28854,29051,29700,29760)
+    if(!identical(which(sleekuser[[i]]$POS %in% artifacts), integer(0))){
+      sleekuser[[i]] <- sleekuser[[i]][-which(sleekuser[[i]]$POS %in% artifacts),]
+    }
   }
   return(sleekuser)
 } #POS,REF,ALT,ALT_DP,REF_DP,ALT_FREQ + data thresholds
@@ -125,8 +100,7 @@ eff <- function(dir){
   return(effuser)
 } #gene annotation files
 
-sleekuser <- lapply(dirlist26,sleek)
-sleekuser.uncut <- lapply(dirlist,sleek)
+sleekuser <- lapply(dirlist,sleek)
 everythinguser <- lapply(dirlist,everything)
 effuser <- lapply(dirlist,eff)
 
@@ -138,26 +112,37 @@ names(everythinguser) <- names(sleekuser)
 names(effuser) <- names(sleekuser)
 names(dirlist) <- names(sleekuser)
 
-#count number of SNPs for each user on each day
-snpcount <- function(user){
-  snplength <- vector(mode = "list", length(user))
-  for (i in seq_along(user)){
-    snplength[[i]] <- length(user[[i]]$POS)
+#remove samples with low overall coverage
+load("naive_depth_files.RData")
+
+rm.coverage <- function(user,depth){
+  names(user) <- names(depth)
+  if(length(which(flatten(depth) < 1000)) > 0){
+    user <- user[-c(which(flatten(depth) < 1000))]
   }
-  return(snplength)
+  return(user)
 }
-snpcounts <- lapply(sleekuser.uncut,snpcount)
-snpcounts <- unlist(snpcounts)
 
-user.info <- import("all_saliva_user_info.xlsx")
-naive.info <- user.info[which(user.info$status == "unvaccinated"),]
-naive.info <- naive.info %>%
-  select(user_id,day_of_infection)
-naive.snpcounts <- bind_cols(naive.info,snpcounts)
-colnames(naive.snpcounts)[3] <- "SNP_count"
+sleekuser <- map2(sleekuser,naive.depth.files,rm.coverage)
+everythinguser <- map2(everythinguser,naive.depth.files,rm.coverage)
+effuser <- map2(effuser,naive.depth.files,rm.coverage)
 
-save(naive.snpcounts, file = "naive_snpcounts.RData")
-write.csv(naive.snpcounts,"naive_snpcounts.csv")
+#remove samples with low Ct
+naive.ct <- import("naive_ct.xlsx")
+naive.ct <- naive.ct %>%
+  group_by(user_id, .add = TRUE) %>%
+  group_split()
+names(naive.ct) <- names(sleekuser)
+sleekuser.uncut <- sleekuser
+
+rm.ct <- function(user,ct){
+  discard.list <- c(ct$vdl_barcode[(which(ct$ct > 26))])
+  discard.list <- as.character(discard.list[which(discard.list %in% names(user))])
+  user.cut <- discard_at(user, all_of(discard.list))
+  return(user.cut)
+}
+
+sleekuser <- map2(sleekuser,naive.ct,rm.ct)
 
 #pull out SNP positions
 positions <- function(sleekuser){
@@ -170,19 +155,6 @@ positions <- function(sleekuser){
 }
 allpos <- lapply(sleekuser,positions)
 allpos.uncut <- lapply(sleekuser.uncut,positions)
-
-#pull out variants that do NOT appear more than once within users
-keepunique <- function(pos){
-  splat <- list.rbind(pos)
-  unique  <- distinct(splat)
-  return(unique)
-}
-uniqueSNPs <- list()
-uniquecounts <- list()
-for(i in seq_along(allpos.uncut)){
-  uniqueSNPs[[i]] <- keepunique(allpos.uncut[[i]])
-  uniquecounts[[i]] <- length(uniqueSNPs[[i]]$POS)
-}
 
 #pull out intersecting iSNVs
 snp.intersect <- function(allpos){
@@ -201,26 +173,6 @@ snp.intersect <- function(allpos){
 
 naive.intersecting <- lapply(allpos,snp.intersect)
 naive.intersecting <- lapply(naive.intersecting,arrange,POS)
-
-save(naive.intersecting,file = "naive_intersecting.RData") 
-
-#count shared iSNVs present on each day
-shared.lengths <- function(all,intersecting){
-  subset <- list()
-  subset.lengths <- list()
-  for(i in seq_along(all)){
-    subset[[i]] <- which(all[[i]]$POS %in% intersecting$POS)
-    subset.lengths[[i]] <- length(subset[[i]])
-  }
-  subset.lengths <- unlist(subset.lengths)
-  return(subset.lengths)
-}
-naive.daily.shared <- list()
-for(i in seq_along(naive.intersecting)){
-  naive.daily.shared[[i]] <- shared.lengths(allpos.uncut[[i]],naive.intersecting[[i]])
-}
-names(naive.daily.shared) <- names(naive.intersecting)
-save(naive.daily.shared, file = "naive_daily_shared.RData")
 
 #create variant tables to track shared iSNV frequencies over time
 varianttable <- function(intersectuser,everythinguser){
@@ -288,16 +240,46 @@ NA_01 <- function(vartable){
 }
 naive.vartables <- lapply(naive.vartables,NA_01)
 
+#remove consensus variants
+remove.consensus <- function(user){
+  info <- user[,1:3]
+  freqs <- user[,grep("freq",colnames(user))]
+  keeps <- freqs
+  for(i in seq_along(rownames(keeps))){
+    for(j in seq_along(colnames(keeps))){
+      if(!identical(grep("(low dp)", keeps[i,j]),integer(0))){
+        keeps[i,j] <- 1
+      }
+      if(length(which(keeps[i,] < 0.97)) < 2){
+        keeps[i,] <- "X"
+      }
+    }
+  }
+  info <- info[which(keeps$freq_1 != "X"),]
+  freqs <- freqs[which(keeps$freq_1 != "X"),]
+  final <- cbind(info,freqs)
+  return(final)
+}
+naive.vartables <- lapply(naive.vartables, remove.consensus)
+
+#generate list of shared variants
+naive.intersecting <- list()
+for(i in seq_along(naive.vartables)){
+  naive.intersecting[[i]] <- naive.vartables[[i]][,c(1:3)]
+}
+names(naive.intersecting) <- paste0("user_",names(sleekuser))
+save(naive.intersecting, file = "naive_intersecting.RData")
+
 #reformat SNP notation with no +/-'s (eg. REF = C, ALT= +T --> REF = C, ALT = CT)
 for(i in seq_along(naive.vartables)){
   for(j in seq_along(naive.vartables[[i]]$ALT)){
     if(substr(naive.vartables[[i]]$ALT[[j]],0,1)=="+"){
       naive.vartables[[i]]$ALT[[j]] <- paste0(naive.vartables[[i]]$REF[[j]], 
-                                               substr(naive.vartables[[i]]$ALT[[j]],2,nchar(naive.vartables[[i]]$ALT[[j]])))
+                                              substr(naive.vartables[[i]]$ALT[[j]],2,nchar(naive.vartables[[i]]$ALT[[j]])))
     }
     if(substr(naive.vartables[[i]]$ALT[[j]],0,1)=="-"){
       naive.vartables[[i]]$REF[[j]] <- paste0(naive.vartables[[i]]$REF[[j]],
-                                               substr(naive.vartables[[i]]$ALT[[j]],2,nchar(naive.vartables[[i]]$ALT[[j]])))
+                                              substr(naive.vartables[[i]]$ALT[[j]],2,nchar(naive.vartables[[i]]$ALT[[j]])))
       naive.vartables[[i]]$ALT[[j]] <- substr(naive.vartables[[i]]$REF[[j]],0,1)
     }
   }
@@ -392,10 +374,9 @@ write.csv(naive.annotable,"naive_annotations.csv")
 for(i in seq_along(naive.vartables)){
   for(j in seq_along(naive.vartables[[i]]$POS)){
     naive.vartables[[i]]$POS[[j]] <- paste0(naive.vartables[[i]]$REF[[j]], 
-      naive.vartables[[i]]$POS[[j]], naive.vartables[[i]]$ALT[[j]])
+                                            naive.vartables[[i]]$POS[[j]], naive.vartables[[i]]$ALT[[j]])
   }
 }
-
 
 for(i in seq_along(naive.vartables)){
   naive.vartables[[i]] <- naive.vartables[[i]] %>%
@@ -416,27 +397,100 @@ for(i in seq_along(naive.vartables)){
   write.csv(naive.vartables[[i]],filenames[[i]])
 }
 
-#count the total number of intersecting mutations for each user
-load("naive_intersecting.RData")
+#count shared iSNVs present on each day
+shared.lengths <- function(all,intersecting){
+  subset <- list()
+  subset.lengths <- list()
+  for(i in seq_along(all)){
+    subset[[i]] <- which(all[[i]]$POS %in% intersecting$POS)
+    subset.lengths[[i]] <- length(subset[[i]])
+  }
+  subset.lengths <- unlist(subset.lengths)
+  return(subset.lengths)
+}
+naive.daily.shared <- map2(allpos.uncut, naive.intersecting, shared.lengths)
+names(naive.daily.shared) <- names(naive.intersecting)
+save(naive.daily.shared, file = "naive_daily_shared.RData")
+
+#count the total number of shared iSNVs for each user
 naive.intersect.lengths <- vector(mode = "list", length = length(naive.intersecting))
 for(i in seq_along(naive.intersecting)){
   naive.intersect.lengths[[i]] <- length(naive.intersecting[[i]]$POS)
 }
+
+#count iSNVs that do NOT appear more than once within users
+unique.lengths <- function(user, intersecting){
+  unique <- list()
+  lengths <- list()
+  for(i in seq_along(user)){
+    user[[i]] <- user[[i]] %>%
+      mutate("SNP" = paste0(REF,POS,ALT)) %>%
+      filter(ALT_FREQ <= 0.97)
+    intersecting <-  mutate(intersecting, "SNP" = paste0(REF,POS,ALT))
+    if(dim(intersecting)[[1]] > 0){
+      unique[[i]] <- user[[i]][-which(user[[i]]$SNP %in% intersecting$SNP),]
+    } else {
+      unique[[i]] <- user[[i]]
+    }
+    lengths[[i]] <- length(unique[[i]]$POS)
+  }
+  lengths <- unlist(lengths)
+  return(lengths)
+}
+naive.daily.unique <- map2(sleekuser.uncut, naive.intersecting, unique.lengths)
+
+keep.unique <- function(user, intersecting){
+  unique <- list()
+  for(i in seq_along(user)){
+    user[[i]] <- user[[i]] %>%
+      mutate("SNP" = paste0(REF,POS,ALT)) %>%
+      filter(ALT_FREQ <= 0.97)
+    intersecting <-  mutate(intersecting, "SNP" = paste0(REF,POS,ALT))
+    if(dim(intersecting)[[1]] > 0){
+      unique[[i]] <- user[[i]][-which(user[[i]]$SNP %in% intersecting$SNP),]
+    } else {
+      unique[[i]] <- user[[i]]
+    }
+  }
+  unique <- bind_rows(unique)
+  count <- length(unique$POS)
+  return(count)
+}
+
+naive.unique.counts <- map2(sleekuser.uncut, naive.intersecting, keep.unique)
+naive.unique.counts <- unlist(naive.unique.counts)
+
+#count number of SNPs for each user on each day
+naive.daily.counts <- map2(naive.daily.shared, naive.daily.unique, ~.x+.y)
+user.info <- import("all_saliva_user_info.xlsx")
+naive.info <- user.info[which(user.info$status == "unvaccinated"),]
+naive.info <- naive.info %>%
+  select(user_id,day_of_infection)
+naive.snpcounts <- bind_cols(naive.info,
+                             unlist(naive.daily.shared),
+                             unlist(naive.daily.counts))
+colnames(naive.snpcounts)[3] <- "shared_SNPs"
+colnames(naive.snpcounts)[4] <- "total_SNPs"
+
+save(naive.snpcounts, file = "naive_snpcounts.RData")
+write.csv(naive.snpcounts,"naive_snpcounts.csv")
 
 #compile all iSNV count data (shared iSNVs, unique iSNVs, and total iSNVs)
 naive.shared <- as.data.frame(matrix(nrow = 20,ncol = 4))
 colnames(naive.shared) <- c("Participant ID", "Shared", "Unique", "Total")
 naive.shared[,1] <- names(dirlist)
 naive.shared[,2] <- as.numeric(unlist(naive.intersect.lengths))
-naive.shared[,3] <- as.numeric(unlist(uniquecounts))
+naive.shared[,3] <- as.numeric(naive.unique.counts)
 naive.shared[,4] <- naive.shared[,2] + naive.shared[,3]
 naive.shared$`Participant ID` <- as.character(naive.shared$`Participant ID`)
 naive.shared <- as_tibble(naive.shared)
 save(naive.shared, file = "naive_shared.RData")
 
-#plot daily iSNV counts
+
+#plot iSNV information per participant
 load("naive_snpcounts.RData")
 load("naive_shared.RData")
+
 naive.snpcounts <- as_tibble(naive.snpcounts)
 naive.snpcounts$user_id <- as.character(naive.snpcounts$user_id)
 
@@ -445,7 +499,7 @@ twenty.palette <-c("#9D6A90","#94719A","#8978A2","#7C7FA9","#6D86AD","#5D8DAF",
                    "#46AE81","#58B075","#6AB269","#7CB25E","#8FB355","#A2B24D",
                    "#B5B148","#C8AF46")
 
-ggplot(data=naive.snpcounts,aes(x=user_id,y=SNP_count))+ 
+ggplot(data=naive.snpcounts,aes(x=user_id,y=total_SNPs))+ 
   geom_dotplot(binaxis = "y", binwidth = .08,stackdir = "center", color = NA, aes(fill = user_id))+
   xlab("Participant ID")+
   ylab("iSNV Count")+
@@ -465,10 +519,7 @@ ggplot(data=naive.snpcounts,aes(x=user_id,y=SNP_count))+
         axis.title.x = element_text(margin = margin(t=10)),
         plot.title = element_text(size = 22))
 
-
 ggsave("figs/naive_SNPcounts.png")
-
-
 
 
 

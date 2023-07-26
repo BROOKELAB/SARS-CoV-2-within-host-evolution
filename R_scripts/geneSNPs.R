@@ -4,15 +4,18 @@ library(trackViewer)
 library(here)
 
 #naive lolliplot
-ten.palette <- c("#9D6A90","#8879A3","#6A88AE","#4795AE","#29A1A4","#30A991",
-                 "#52AF79","#78B261","#A0B24E","#C8AF46")
+thirteen.palette <- c("#9D6A90","#8E759F","#7981AA","#618CAF","#4696AE","#2E9EA7",
+                      "#27A59B","#37AB8B","#52AF79","#6FB267","#8CB356","#AAB24A",
+                      "#C8AF46")
 
 genome <- GRanges(seqnames = "SARS-CoV-2",
-                  ranges = IRanges(c(1,266,21563,25393,26245,27394,27894,28274,29558,29675),
-                                   width = c(265,21290,3822,828,228,366,366,1260,117,229),
-                                   names = c("5'UTR","ORF1ab","S","ORF3a","E","ORF7a","ORF8",
-                                             "N","ORF10","3'UTR")),
-                  fill = ten.palette,
+                  ranges = IRanges(c(1,266,21563,25393,26245,26523,27202,
+                                     27394,27756, 27894,28274,29558,29675),
+                                   width = c(265,21290,3822,828,228,669,186,
+                                             366,132,366,1260,117,229),
+                                   names = c("5'UTR","ORF1ab","S","ORF3a","E","M","ORF6",
+                                             "ORF7a","ORF7b","ORF8","N","ORF10","3'UTR")),
+                  fill = thirteen.palette,
                   height = .05)
 naive_annotations <- import("naive_annotations.csv")
 naive_annotations <- naive_annotations %>%
@@ -42,22 +45,24 @@ SNPranges <- GRanges("SARS-CoV-2",
                      IRanges(naiveSNPs,width = 1,names = NULL),
                      score = naive_snp_table$COUNT,
                      color = naive_snp_table$color)
-lolliplot(SNPranges,genome, 
-         xaxis = c(0,5000,10000,15000,20000,25000,30000),
-         xaxis.gp = gpar(fontsize = 19),
-         yaxis = F,
-         cex=.8)
+lolliplot(SNPranges,genome,
+          xaxis = c(0,5000,10000,15000,20000,25000,30000),
+          yaxis = F,
+          xaxis.gp = gpar(fontsize = 19),
+          cex=.5)
 
 #vaccinated lolliplot
-ten.palette <- c("#9D6A90","#8879A3","#6A88AE","#4795AE","#29A1A4","#30A991",
-                 "#52AF79","#78B261","#A0B24E","#C8AF46")
-
+thirteen.palette <- c("#9D6A90","#8E759F","#7981AA","#618CAF","#4696AE","#2E9EA7",
+                      "#27A59B","#37AB8B","#52AF79","#6FB267","#8CB356","#AAB24A",
+                      "#C8AF46")
 genome <- GRanges(seqnames = "SARS-CoV-2",
-                  ranges = IRanges(c(1,266,21563,25393,26245,27394,27894,28274,29558,29675),
-                                   width = c(265,21290,3822,828,228,366,366,1260,117,229),
-                                   names = c("5'UTR","ORF1ab","S","ORF3a","E","ORF7a","ORF8",
-                                             "N","ORF10","3'UTR")),
-                  fill = ten.palette,
+                  ranges = IRanges(c(1,266,21563,25393,26245,26523,27202,
+                                     27394,27756, 27894,28274,29558,29675),
+                                   width = c(265,21290,3822,828,228,669,186,
+                                             366,132,366,1260,117,229),
+                                   names = c("5'UTR","ORF1ab","S","ORF3a","E","M","ORF6",
+                                             "ORF7a","ORF7b","ORF8","N","ORF10","3'UTR")),
+                  fill = thirteen.palette,
                   height = .05)
 
 vax_annotations <- import("vax_annotations.csv")
@@ -90,7 +95,7 @@ lolliplot(SNPranges,genome,
           xaxis = c(0,5000,10000,15000,20000,25000,30000),
           yaxis = F,
           xaxis.gp = gpar(fontsize = 19),
-          cex=.8)
+          cex=.5)
 
 #histogram of snp counts 
 naive.counts <- naive_snp_table %>%
@@ -102,7 +107,10 @@ ggplot(naive.counts,aes(x=Count,y=Freq))+
   xlab("Number of Participants Sharing an iSNV")+
   ylab("Frequency")+
   theme_bw()+
-  theme(axis.title = element_text(size = 22),axis.text = element_text(size = 19))
+  theme(axis.title = element_text(size = 22),
+        axis.title.x = element_text(margin = margin(t=10)),
+        axis.title.y = element_text(margin = margin(r=15)),
+        axis.text = element_text(size = 19))
 ggsave("figs/naive_variantcount.png")
 
 vax.counts <- vax_snp_table %>%
@@ -116,6 +124,95 @@ ggplot(vax.counts,aes(x=Count,y=Freq))+
   theme_bw()+
   theme(axis.title = element_text(size = 22),axis.text = element_text(size = 19))
 ggsave("figs/vax_variantcount.png")
+
+#dispersion calculations
+snp.window <- function(pos,ann){
+  range <- pos:(pos+100)
+  snps <- ann[which(ann$POS %in% range),]
+  snp.count <- sum(snps$Freq)
+  snp.table <- as.data.frame(cbind(range[1],range[100],snp.count))
+  colnames(snp.table) <- c("Start","End","Count")
+  return(snp.table)
+}
+
+snp.density.naive <- list()
+for(i in seq_along(1:29803)){
+  snp.density.naive[[i]] <- snp.window(i,naive_annotations)
+}
+snp.density.naive <- bind_rows(snp.density.naive)
+snp.mean.naive <- mean(snp.density.naive$Count)
+
+poisson.snp <- function(region,mean){
+  e <- 2.718
+  x <- region
+  p <- ((e^-mean) * (mean^x))/ (factorial(x))
+  return(p)
+}
+
+snp.density.naive <- snp.density.naive %>%
+  mutate("P" = poisson.snp(Count, snp.mean.naive))
+
+#bonferroni correction
+a <- 0.05
+obs <- 29803
+a.a <- a/obs
+
+which(snp.density.naive$P < a.a) #none
+
+ggplot(data = snp.density.naive, aes(x = Start, y = log(P)))+
+  geom_segment(data = snp.density.naive, aes(x = Start, xend = End,
+                                      y = log(P), yend = log(P),
+                                      color = log(P)),
+               size = 4)+
+  xlab("Nucleotide position")+
+  ggtitle("Unvaccinated")+
+  ylim(c(-30,0))+
+  scale_color_viridis_c(limits = c(-30,0))+
+  geom_hline(yintercept = log(a.a), linetype = 2)+
+  theme_bw()+
+  theme(axis.title = element_text(size = 22),
+        axis.title.x = element_text(margin = margin(t=10)),
+        axis.title.y = element_text(margin = margin(r=12)),
+        axis.text = element_text(size = 19),
+        plot.title = element_text(size=22),
+        legend.position = "none")
+ggsave("figs/naive_poisson.png")
+
+#vaccinated
+snp.density.vax <- list()
+for(i in seq_along(1:29803)){
+  snp.density.vax[[i]] <- snp.window(i,vax_annotations)
+}
+snp.density.vax <- bind_rows(snp.density.vax)
+snp.mean.vax <- mean(snp.density.vax$Count)
+
+snp.density.vax <- snp.density.vax %>%
+  mutate("P" = poisson.snp(Count, snp.mean.vax))
+
+which(snp.density.vax$P < a.a)
+
+ggplot(data = snp.density.vax, aes(x = Start, y = log(P)))+
+  geom_segment(data = snp.density.vax, aes(x = Start, xend = End,
+                                             y = log(P), yend = log(P),
+                                             color = log(P)),
+               size = 4)+
+  xlab("Nucleotide position")+
+  ggtitle("Vaccinated")+
+  scale_y_continuous(limits = c(-30, 0), breaks = c(-30,-20,-10,0))+
+  scale_color_viridis_c(limits = c(-30,0))+
+  geom_hline(yintercept = log(a.a), linetype = 2)+
+  theme_bw()+
+  theme(axis.title = element_text(size = 22),
+        axis.title.x = element_text(margin = margin(t=10)),
+        axis.title.y = element_text(margin = margin(r=12)),
+        axis.text = element_text(size = 19),
+        plot.title = element_text(size=22),
+        legend.position = "none")
+ggsave("figs/vax_poisson.png")
+
+
+
+
 
 
 
