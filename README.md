@@ -27,16 +27,21 @@ All files required for analysis and all script outputs are stored in `SARS_data.
 # Workflow
 
 ## 1. Identifying samples with low coverage
+
 1. Run coverage.R
    * Folders and files required:
    		* `naive_depths/`
    		* `vax_depths/`
-   		* `nasal_depths`	 
-       
-      			
-   
-
-## 1. Relationship between sample Ct and sequence quality *(Fig 1, S1)*
+   		* `nasal_depths/
+   * Output:
+     		* `naive_depth_files.RData`
+     		* `naive_depth_table.csv`
+     		* `vax_depth_files.RData`
+     		* `vax_depth_table.csv`
+     		* `nasal_depth_files.RData`
+     		* `nasal_depth_table.csv`
+     			
+## 2. Relationship between sample Ct and sequence quality *(Fig 1, S1, S2)*
 
 1. Run `nct_vs_coverage.R`
     * Folders and files required:
@@ -46,20 +51,20 @@ All files required for analysis and all script outputs are stored in `SARS_data.
  2. Run `dilutioncontrol.R`
     * Folders and files required:
         * `dilution_output_tables/`
-        * `dilution_controls/ct26_dilutions.csv`
-        * `dilution_controls/ct28_dilutions.csv`
-        * `dilution_controls/ct23_dilutions.csv`
     * Output: 
         * **Fig 1B**
+        * **Fig S1**
+        * `dilution_controls/`
+        * `alpha_SNPs.RData`
   3. Run `ct_vs_snps.R`
       * Folders and files required: 
 	      * `naive_ct.xlsx`
 	      * `vaccinated_ct.csv`
-	      * `naive_daily_shared.RData`
-	      * `vax_daily_shared.RData`
+        	* `nasal_snpcounts.RData`
+         	* `all_nasal_user_info.xlsx`	 
       * Output: 
 	      * **Fig 1C**
-	      * **Fig S1**
+	      * **Fig S2**
 	      
 ## 2. Within-host diversity and iSNV tracking *(Fig 2, 5, 6, S4, S5)*
 
