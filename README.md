@@ -17,11 +17,24 @@ This project uses R (v4.1.1) and associated packages in base R.
 * rlist (v0.4.6.2)
 * trackViewer (v1.28.1)
 * gtools (v3.9.2)
+* gdata (v2.18.0.1)
+* Nmisc (v0.3.7)
+* data.table (v1.14.2)
 * here (v1.0.1)
 
 All files required for analysis and all script outputs are stored in `SARS_data.zip`. To begin, download this folder and create a new R project within the directory. 
 
 # Workflow
+
+## 1. Identifying samples with low coverage
+1. Run coverage.R
+   * Folders and files required:
+   		* `naive_depths/`
+   		* `vax_depths/`
+   		* `nasal_depths`	 
+       
+      			
+   
 
 ## 1. Relationship between sample Ct and sequence quality *(Fig 1, S1)*
 
