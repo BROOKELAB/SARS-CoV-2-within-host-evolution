@@ -79,7 +79,7 @@ All files required for analysis and all script outputs are stored in `SARS_data.
 	* Output:
  		* **Fig S3**
 
-## 4. Within-host diversity and iSNV tracking *(Fig 2, 5, 6, S6, S7, S8)*
+## 4. Within-host diversity and iSNV tracking *(Fig 2, 5, 6, S5, S6, S7)*
 
 1. Run `naivevariants.R`
     * Folders and files required:
@@ -92,7 +92,7 @@ All files required for analysis and all script outputs are stored in `SARS_data.
       * `naive_intersecting.RData` (list of all shared iSNVs per participant)
       * `naive_daily_shared.RData` (daily shared iSNV counts per participant)
       * `naive_annotations.csv` (iSNVs annotated by gene function)
-      * `naive_variant_tables/` (iSNV frequency tracking over time, tables imported into Prism to generate **Fig 5** and **Fig S6**)
+      * `naive_variant_tables/` (iSNV frequency tracking over time, tables imported into Prism to generate **Fig 5** and **Fig S5**)
       * `naive_shared.RData` (summary of iSNV data)
 2. Run `vaccinatedvariants.R`
     * Folders and files required: 
@@ -105,7 +105,7 @@ All files required for analysis and all script outputs are stored in `SARS_data.
       * `vax_intersecting.RData` (list of all shared iSNVs per participant)
       * `vax_daily_shared.RData` (daily shared iSNV counts per participant)
       * `vax_annotations.csv` (iSNVs annotated by gene function)
-      * `vaccinated_variant_tables/` (iSNV frequency tracking over time, tables imported into Prism to generate **Fig 6** and **Fig S7**)
+      * `vaccinated_variant_tables/` (iSNV frequency tracking over time, tables imported into Prism to generate **Fig 6** and **Fig S6**)
       * `vax_shared.RData` (summary of iSNV data)
 3. Run `nasalvariants.R`
     * Folders and files required: 
@@ -116,7 +116,7 @@ All files required for analysis and all script outputs are stored in `SARS_data.
 	    * `nasal_snpcounts.RData` (daily iSNV counts per participant)
       * `nasal_intersecting.RData` (list of all shared iSNVs per participant)
       * `nasal_daily_shared.RData` (daily shared iSNV counts per participant)
-      * `nasal_variant_tables/` (iSNV frequency tracking over time, tables imported into Prism to generate **Fig S8**)
+      * `nasal_variant_tables/` (iSNV frequency tracking over time, tables imported into Prism to generate **Fig S7**)
       * `vax_shared.RData` (summary of iSNV data)
 4. Run `data_analysis.R`
     * Folders and files required:
@@ -133,7 +133,7 @@ All files required for analysis and all script outputs are stored in `SARS_data.
 	    * **Fig 2D**
 	    * Statistics on iSNV counts and distributions
         
-## 5. Contamination check *(Fig S9)*
+## 5. Contamination check *(Fig S8)*
 
 1. Run `contam_check.R`
 	* Folders and files required:
@@ -144,9 +144,9 @@ All files required for analysis and all script outputs are stored in `SARS_data.
 		* `run_cors.RData`
   		* `all_saliva_user_info.xlsx`
 	* Output:
- 		* **Fig S9**
+ 		* **Fig S8**
 
-## 6. iSNV mapping along the SARS-CoV-2 genome *(Fig 3, S4, S5)*
+## 6. iSNV mapping along the SARS-CoV-2 genome *(Fig 3, S4)*
 
 1. Run `geneSNPs.R`
     * Folders and files required:
@@ -155,8 +155,6 @@ All files required for analysis and all script outputs are stored in `SARS_data.
      * Output:
 	     * **Fig 3**
 	     * **Fig S4**
-       * **Fig S5**
-
 
 ## 7. Compartmentalization analysis *(Fig 4)*
 
@@ -185,7 +183,7 @@ All files required for analysis and all script outputs are stored in `SARS_data.
 	   * `FST_tables/` (.csv tables of within- and between-environment FST values for each individual, imported into prism to generate **Fig 4C**)
 	   * `FST_significance.csv` (significance values for comparisons of FSTs in within- vs. between-environment pairings)
 
-## 8. See global_data_analysis for code used to generate *Fig S10*
+## 8. See global_data_analysis for code used to generate *Fig S9*
 
 ## Extras
  * `misc/SARS-CoV-2_samples.xlsx` and `misc/SRA_data.xlsx` contain raw sequence information and metadata
