@@ -1,29 +1,31 @@
 library(tidyverse)
 library(rio)
 library(gdata)
-library(data.table)
+library(ggpubr)
 library(here)
 
-
 calc.FST <- function(sample1,sample2){
-  sample1 <- lapply(sample1, as.numeric)
-  sample2 <- lapply(sample2, as.numeric)
+  sample1 <- unlist(lapply(sample1, as.numeric))
+  sample2 <- unlist(lapply(sample2, as.numeric))
+  sample.tab <- as_tibble(data.frame(matrix(data = NA, ncol = 2)))
+  sample.tab <- na.omit(as_tibble(cbind(sample1,sample2)))
   
   avg.freq <- list()
   s1.haplotype <- list()
   s2.haplotype <- list()
   pop.haplotype <- list()
-  if((length(sample1) > 0) && (length(sample2) > 0)){ 
+  
+  if((dim(sample.tab)[1]) > 0){ 
+    sample1 <- sample.tab$sample1
+    sample2 <- sample.tab$sample2
     for(i in seq_along(sample1)) {
-      if((!is.na(sample1[[i]])) && (!is.na(sample2[[i]]))){
-        avg.freq[[i]] <- mean(c(sample1[[i]],sample2[[i]]))
-        s1.haplotype[[i]] <- 1 - (sample1[[i]]^2 + 
-                                    ((1 - sample1[[i]])^2))
-        s2.haplotype[[i]] <- 1 - (sample2[[i]]^2 + 
-                                    ((1 - sample2[[i]])^2))
-        pop.haplotype[[i]] <- 1 - (avg.freq[[i]]^2 + 
-                                     ((1 - avg.freq[[i]])^2))
-      }
+      avg.freq[[i]] <- mean(c(sample1[[i]],sample2[[i]]))
+      s1.haplotype[[i]] <- 1 - (sample1[[i]]^2 + 
+                                  ((1 - sample1[[i]])^2))
+      s2.haplotype[[i]] <- 1 - (sample2[[i]]^2 + 
+                                  ((1 - sample2[[i]])^2))
+      pop.haplotype[[i]] <- 1 - (avg.freq[[i]]^2 + 
+                                   ((1 - avg.freq[[i]])^2))
     } 
     s1.haplotype <- unlist(s1.haplotype)
     s2.haplotype <- unlist(s2.haplotype)
@@ -33,14 +35,12 @@ calc.FST <- function(sample1,sample2){
     HS <- mean(c(s1.mean,s2.mean))
     HT <- mean(pop.haplotype)
     FST <- (HT-HS)/HT
-    if(FST == "NaN" | is.na(FST)){ 
+    if(FST == "NaN"){ 
       FST <- 0
     }
   } else {
     FST <- 0
   }
-  
-  
   return(FST)
 }
 
@@ -48,6 +48,7 @@ load("runcontrol.RData")
 threshold <- calc.FST(runcontrol$RUN1,runcontrol$RUN2) #this will be FST threshold of detection
 
 load("comparison_list.RData")
+
 calc.nasal.FST <- function(user){
   nasal <- user[,grep("NASAL",colnames(user))]
   cj <- expand.grid(seq_along(nasal), seq_along(nasal))
@@ -64,7 +65,7 @@ calc.nasal.FST <- function(user){
 nasal.fst.list <- lapply(comp.list,calc.nasal.FST)
 nasal.fst <- lapply(nasal.fst.list, unlist)
 all.nasal.fst <- unlist(nasal.fst)
-  
+
 calc.saliva.FST <- function(user){
   saliva <- user[,grep("SALIVA",colnames(user))]
   cj <- expand.grid(seq_along(saliva), seq_along(saliva))
@@ -99,7 +100,6 @@ between.fst.list <- lapply(comp.list, calc.between.FST)
 between.fst <- lapply(between.fst.list, unlist)
 all.between.fst <- unlist(between.fst)
 
-
 user.fst <- list()
 for(i in seq_along(comp.list)){
   user.fst[[i]] <- matrix(nrow = length(between.fst[[i]]),ncol = 3, data = NA)
@@ -124,9 +124,9 @@ colnames(stat.matrix) <- c("nasal_vs_saliva","nasal_vs_between","saliva_vs_betwe
 rownames(stat.matrix) <- c(names(comp.list))
 
 for(i in seq_along(rownames(stat.matrix))){
-    stat.matrix[i,1] <- (t.test(nasal.fst[[i]],saliva.fst[[i]],var.equal = F))$p.value
-    stat.matrix[i,2] <- (t.test(nasal.fst[[i]],between.fst[[i]],var.equal = F))$p.value
-    stat.matrix[i,3] <- (t.test(saliva.fst[[i]],between.fst[[i]],var.equal = F))$p.value
+  stat.matrix[i,1] <- (t.test(nasal.fst[[i]],saliva.fst[[i]],var.equal = F))$p.value
+  stat.matrix[i,2] <- (t.test(nasal.fst[[i]],between.fst[[i]],var.equal = F))$p.value
+  stat.matrix[i,3] <- (t.test(saliva.fst[[i]],between.fst[[i]],var.equal = F))$p.value
 }
 
 total.matrix <- matrix(nrow = 1, ncol = 3)
