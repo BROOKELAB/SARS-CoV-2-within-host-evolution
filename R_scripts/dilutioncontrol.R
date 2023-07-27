@@ -62,13 +62,15 @@ write.csv(ct23.table, file = "dilution_controls/ct23_dilutions.csv")
 cor.test(ct23.table$R1, ct23.table$R2, method = "pearson") #cor = 0.9958906 #p < 2.2e-16
 
 five.palette <- c("#9D6A90","#618BAF","#27A59B","#6EB267","#C8AF46")
+
+#plot
 ggplot(data=ct23.table, aes(x=R1,y=R2,col = DIL)) +
   geom_point(size=4) +
   labs(x="R1 allele frequency",y="R2 allele frequency")+
-  scale_x_continuous(limits = c(0,1),
-                     breaks = c(0, 0.25, 0.5, 0.75,1))+
-  scale_y_continuous(limits = c(0,1),
-                     breaks = c(0, 0.25, 0.5, 0.75,1))+
+  scale_x_continuous(limits = c(0,0.51),
+                     breaks = c(0,0.1, 0.2, 0.3,0.4, 0.5))+
+  scale_y_continuous(limits = c(0,0.51),
+                     breaks = c(0,0.1, 0.2, 0.3,0.4, 0.5))+
   ggtitle("Ct = 23.6")+
   scale_color_manual(values = five.palette, breaks = c("1%","2%","5%","10%","50%"))+
   theme_bw()+
@@ -129,14 +131,15 @@ write.csv(ct26.table, file = "dilution_controls/ct26_dilutions.csv")
 
 cor.test(ct26.table$R1, ct26.table$R2, method = "pearson") #cor = 0.9924263 #p < 2.2e-16
 
+#plot
 five.palette <- c("#9D6A90","#618BAF","#27A59B","#6EB267","#C8AF46")
 ggplot(data=ct26.table, aes(x=R1,y=R2,col = DIL)) +
   geom_point(size=4) +
   labs(x="R1 allele frequency",y="R2 allele frequency")+
-  scale_x_continuous(limits = c(0,1),
-                     breaks = c(0, 0.25, 0.5, 0.75,1))+
-  scale_y_continuous(limits = c(0,1),
-                     breaks = c(0, 0.25, 0.5, 0.75,1))+
+  scale_x_continuous(limits = c(0,0.8),
+                     breaks = c(0, 0.2, 0.4, 0.6,0.8))+
+  scale_y_continuous(limits = c(0,0.8),
+                     breaks = c(0, 0.2, 0.4, 0.6,0.8))+
   ggtitle("Ct = 26")+
   scale_color_manual(values = five.palette, breaks = c("1%","2%","5%","10%","50%"))+
   theme_bw()+
@@ -196,14 +199,15 @@ write.csv(ct28.table, file = "dilution_controls/ct28_dilutions.csv")
 
 cor.test(ct28.table$R1, ct28.table$R2, method = "pearson") #cor = 0.9667631 #p < 2.2e-16
 
+#plot
 five.palette <- c("#9D6A90","#618BAF","#27A59B","#6EB267","#C8AF46")
 ggplot(data=ct28.table, aes(x=R1,y=R2,col = DIL)) +
   geom_point(size=4) +
   labs(x="R1 allele frequency",y="R2 allele frequency")+
-  scale_x_continuous(limits = c(0,1),
-                     breaks = c(0, 0.25, 0.5, 0.75,1))+
-  scale_y_continuous(limits = c(0,1),
-                     breaks = c(0, 0.25, 0.5, 0.75,1))+
+  scale_x_continuous(limits = c(0,0.51),
+                     breaks = c(0, 0.1, 0.2, 0.3, 0.4, 0.5))+
+  scale_y_continuous(limits = c(0,0.51),
+                     breaks = c(0, 0.1, 0.2, 0.3, 0.4, 0.5))+
   ggtitle("Ct = 28")+
   scale_color_manual(values = five.palette, breaks = c("1%","2%","5%","10%","50%"))+
   theme_bw()+
