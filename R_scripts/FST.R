@@ -2,6 +2,7 @@ library(tidyverse)
 library(rio)
 library(gdata)
 library(ggpubr)
+library(Nmisc)
 library(here)
 
 calc.FST <- function(sample1,sample2){
@@ -39,7 +40,7 @@ calc.FST <- function(sample1,sample2){
       FST <- 0
     }
   } else {
-    FST <- 0
+    FST <- NA
   }
   return(FST)
 }
@@ -56,8 +57,10 @@ calc.nasal.FST <- function(user){
   fst <- list()
   for(i in seq_along(cj$Var1)){
     fst[[i]] <- calc.FST(nasal[[cj$Var1[[i]]]],nasal[[cj$Var2[[i]]]])
-    if(fst[[i]] <= threshold){
-      fst[[i]] <- 0
+    if(!is.na(fst[[i]])){
+      if(fst[[i]] <= threshold){
+        fst[[i]] <- 0
+      }
     }
   }
   return(fst)
@@ -73,8 +76,10 @@ calc.saliva.FST <- function(user){
   fst <- list()
   for(i in seq_along(cj$Var1)){
     fst[[i]] <- calc.FST(saliva[[cj$Var1[[i]]]],saliva[[cj$Var2[[i]]]])
-    if(fst[[i]] <= threshold){
-      fst[[i]] <- 0
+    if(!is.na(fst[[i]])){
+      if(fst[[i]] <= threshold){
+        fst[[i]] <- 0
+      }
     }
   }
   return(fst)
@@ -90,8 +95,10 @@ calc.between.FST <- function(user){
   fst <- list()
   for(i in seq_along(cj$Var1)){
     fst[[i]] <- calc.FST(nasal[[cj$Var1[[i]]]],saliva[[cj$Var2[[i]]]])
-    if(fst[[i]] <= threshold){
-      fst[[i]] <- 0
+    if(!is.na(fst[[i]])){
+      if(fst[[i]] <= threshold){
+        fst[[i]] <- 0
+      }
     }
   }
   return(fst)
@@ -124,10 +131,18 @@ colnames(stat.matrix) <- c("nasal_vs_saliva","nasal_vs_between","saliva_vs_betwe
 rownames(stat.matrix) <- c(names(comp.list))
 
 for(i in seq_along(rownames(stat.matrix))){
-  stat.matrix[i,1] <- (t.test(nasal.fst[[i]],saliva.fst[[i]],var.equal = F))$p.value
-  stat.matrix[i,2] <- (t.test(nasal.fst[[i]],between.fst[[i]],var.equal = F))$p.value
-  stat.matrix[i,3] <- (t.test(saliva.fst[[i]],between.fst[[i]],var.equal = F))$p.value
+  if((length(which(!is.na(nasal.fst[[i]]))) > 1) && (length(which(!is.na(saliva.fst[[i]]))) > 1)){
+    stat.matrix[i,1] <- (t.test(nasal.fst[[i]],saliva.fst[[i]],var.equal = F))$p.value
+  }
+  if((length(which(!is.na(nasal.fst[[i]]))) > 1) && (length(which(!is.na(between.fst[[i]]))) > 1)){
+    stat.matrix[i,2] <- (t.test(nasal.fst[[i]],between.fst[[i]],var.equal = F))$p.value
+  }
+  if((length(which(!is.na(saliva.fst[[i]]))) > 1) && (length(which(!is.na(between.fst[[i]]))) > 1)){
+    stat.matrix[i,3] <- (t.test(saliva.fst[[i]],between.fst[[i]],var.equal = F))$p.value
+  }
 }
+
+stat.matrix.cut <- na.omit(stat.matrix)
 
 total.matrix <- matrix(nrow = 1, ncol = 3)
 colnames(total.matrix) <- c("nasal_vs_saliva","nasal_vs_between","saliva_vs_between")
@@ -141,8 +156,8 @@ stat.matrix <- rbind(stat.matrix,total.matrix)
 write.csv(stat.matrix,"FST_significance.csv")
 
 t.test(all.nasal.fst, all.saliva.fst, alternative = "l", var.equal = F) 
-#mean nasal = 0.009653941 #mean saliva = 0.118295627
-#p-value = 0.0004491
+#mean nasal = 0.01133955 #mean saliva = 0.13895042
+#p-value = 0.0004081
 
 #heatmaps
 heatmap.matrix <- function(user,fstuser){
@@ -170,11 +185,10 @@ heatmap.matrix <- function(user,fstuser){
   return(usermat)
 }
 
-FST.matrix <- list()
-for(i in seq_along(comp.list)){
-  FST.matrix[[i]] <- heatmap.matrix(comp.list[[i]],user.fst[[i]])
-}
-names(FST.matrix) <- gsub("user_","",names(comp.list))
+comp.list.cut <- keep_at(comp.list, rownames(stat.matrix.cut))
+user.fst.cut <- keep_at(user.fst, rownames(stat.matrix.cut))
+
+FST.matrix <- map2(comp.list.cut, user.fst.cut, heatmap.matrix)
 
 FST.maps <- list()
 for(i in seq_along(FST.matrix)){
@@ -197,8 +211,7 @@ for(i in seq_along(FST.matrix)){
 }
 names(FST.maps) <- names(FST.matrix)
 
-#451152 #453058 #459597
-ggpubr::ggarrange(FST.maps$`451152`,FST.maps$`433227`,FST.maps$`438577`,
-                  nrow = 1, ncol = 3)
 
+#ggpubr::ggarrange(FST.maps$`444633`,FST.maps$`433227`,
+                  #nrow = 1, ncol = 2)
 
