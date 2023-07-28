@@ -19,7 +19,6 @@ This project uses R (v4.1.1) and associated packages in base R.
 * gtools (v3.9.2)
 * gdata (v2.18.0.1)
 * Nmisc (v0.3.7)
-* ggpubr (v0.4.0)
 * here (v1.0.1)
 
 All files required for analysis and all script outputs are stored in `SARS_data.zip`. To begin, download this folder and create a new R project within the directory. 
