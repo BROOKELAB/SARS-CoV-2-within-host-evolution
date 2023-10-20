@@ -28,10 +28,11 @@ sleek <- function(dir){
       filter(TOTAL_DP >=1000)%>%
       select(POS,REF,ALT,ALT_DP,TOTAL_DP,ALT_FREQ)%>%
       distinct()
-    artifacts <- c(6696,11074,15965,29051,187,1059,2094,3037,
-                   3130,6696,6990,8022,10323,10741,11074,13408,
+    artifacts <- c(6696,11074,15965,29051,78,187,635,1059,2094,3037,
+                   3130,6696,6990,8022,10323,10741,11074,11567,13408,
                    14786,19684,20148,21137,24034,24378,25563,26144,
-                   26461,26681,28077,28826,28854,29051,29700,29760)
+                   26461,26681,27964,28077,28253,28262,28281,28472,
+                   28826,28854,29051,29700,29760)
     if(!identical(which(sleekuser[[i]]$POS %in% artifacts), integer(0))){
       sleekuser[[i]] <- sleekuser[[i]][-which(sleekuser[[i]]$POS %in% artifacts),]
     }
@@ -99,13 +100,11 @@ nasal.ct <- nasal.ct %>%
 names(nasal.ct) <- names(sleekuser.nas)
 sleekuser.nas.uncut <- sleekuser.nas
 
-
 rm.vec.ct <- function(user,ct){
   ct <- filter(ct, sample %in% names(user))
   vec <- which(ct$cn >= 26)
   return(vec)
 }
-
 nasal.vec.ct <- map2(sleekuser.nas,nasal.ct, rm.vec.ct)
 
 for(i in seq_along(nasal.vec.ct)){
@@ -142,7 +141,6 @@ snp.intersect <- function(allpos){
   common <- distinct(flat)
   return(common)
 }
-
 nasal.intersecting <- lapply(allpos.nas,snp.intersect)
 nasal.intersecting <- lapply(nasal.intersecting,arrange,POS)
 

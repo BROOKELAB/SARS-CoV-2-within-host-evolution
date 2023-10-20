@@ -24,10 +24,11 @@ sleek <- function(dir){
       filter(TOTAL_DP >=1000)%>%
       select(POS,REF,ALT,ALT_DP,TOTAL_DP,ALT_FREQ)%>%
       distinct()
-    artifacts <- c(6696,11074,15965,29051,187,1059,2094,3037,
-                   3130,6696,6990,8022,10323,10741,11074,13408,
+    artifacts <- c(6696,11074,15965,29051,78,187,635,1059,2094,3037,
+                   3130,6696,6990,8022,10323,10741,11074,11567,13408,
                    14786,19684,20148,21137,24034,24378,25563,26144,
-                   26461,26681,28077,28826,28854,29051,29700,29760)
+                   26461,26681,27964,28077,28253,28262,28281,28472,
+                   28826,28854,29051,29700,29760)
     if(!identical(which(sleekuser[[i]]$POS %in% artifacts), integer(0))){
       sleekuser[[i]] <- sleekuser[[i]][-which(sleekuser[[i]]$POS %in% artifacts),]
     }
@@ -502,9 +503,10 @@ twenty.palette <-c("#9D6A90","#94719A","#8978A2","#7C7FA9","#6D86AD","#5D8DAF",
 ggplot(data=naive.snpcounts,aes(x=user_id,y=total_SNPs))+ 
   geom_dotplot(binaxis = "y", binwidth = .08,stackdir = "center", color = NA, aes(fill = user_id))+
   xlab("Participant ID")+
-  ylab("iSNV Count")+
+  ylab("iSNV count")+
   ggtitle("Unvaccinated")+
-  scale_y_log10()+
+  scale_y_continuous(trans=scales::pseudo_log_trans(base = 10),
+                     breaks = c(0,10,100,1000))+
   geom_col(data=naive.shared,aes(x=`Participant ID`,y=Total),fill = NA,
            color="grey40")+
   geom_col(data=naive.shared,aes(x=`Participant ID`,y=Shared),fill = NA,
@@ -521,6 +523,33 @@ ggplot(data=naive.snpcounts,aes(x=user_id,y=total_SNPs))+
 
 ggsave("figs/naive_SNPcounts.png")
 
+#naive iSNV count over time
+load("naive_snpcounts.RData")
+naive.ct <- import("naive_ct.xlsx")
+naive.snpcounts <- mutate(naive.snpcounts, "ct" = naive.ct$ct)
+naive.count.num <- naive.snpcounts
+naive.count.num$day_of_infection <- as.numeric(naive.count.num$day_of_infection)
+naive.daily.test <- glm(total_SNPs ~ day_of_infection, data = naive.count.num,
+                        family = poisson(link = "log"))
+summary(naive.daily.test)
+#coef = 0.117043 #p < 2e-16
+
+#plot naive iSNV count vs day
+naive.snpcounts$day_of_infection <- as.character(naive.snpcounts$day_of_infection)
+ggplot(data = naive.count.num, aes(x=day_of_infection,y=total_SNPs))+
+  geom_point(cex=4)+
+  geom_smooth(method = "glm", method.args = list(family = "poisson"))+
+  scale_x_continuous(limits = c(0,15), breaks = c(0,5,10,15))+
+  xlab("Day post-enrollment") +
+  ylab("iSNV count")+
+  ggtitle("Unvaccinated")+
+  theme_bw()+
+  theme(axis.title = element_text(size = 22),
+        axis.title.x = element_text(margin = margin(t=12)),
+        axis.title.y = element_text(margin = margin(r=15)),
+        axis.text = element_text(size = 19),
+        legend.position = "none", plot.title = element_text(size = 22))
+ggsave("figs/naive_snps_vs_day.png")
 
 
 

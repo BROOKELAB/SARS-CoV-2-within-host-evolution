@@ -1,7 +1,6 @@
 library(tidyverse)
 library(rio)
 library(gdata)
-library(ggpubr)
 library(Nmisc)
 library(here)
 
@@ -46,7 +45,8 @@ calc.FST <- function(sample1,sample2){
 }
 
 load("runcontrol.RData")
-threshold <- calc.FST(runcontrol$RUN1,runcontrol$RUN2) #this will be FST threshold of detection
+threshold <- calc.FST(runcontrol$RUN1,runcontrol$RUN2) #this will be the FST threshold of detection
+#threshold: 0.001276611
 
 load("comparison_list.RData")
 
@@ -156,8 +156,8 @@ stat.matrix <- rbind(stat.matrix,total.matrix)
 write.csv(stat.matrix,"FST_significance.csv")
 
 t.test(all.nasal.fst, all.saliva.fst, alternative = "l", var.equal = F) 
-#mean nasal = 0.01133955 #mean saliva = 0.13895042
-#p-value = 0.0004081
+#mean nasal = 0.01147952 #mean saliva = 0.14430532
+#p-value = 0.0002491
 
 #heatmaps
 heatmap.matrix <- function(user,fstuser){
@@ -196,7 +196,7 @@ for(i in seq_along(FST.matrix)){
     geom_tile() +
     scale_fill_viridis_c(limits = c(0,1),
                          breaks = c(0,.25,.5,.75,1))+
-    ggtitle(names(FST.matrix)[[i]])+
+    ggtitle(gsub("user_","",names(FST.matrix)[[i]]))+
     theme_bw()+
     theme(axis.title = element_blank(),
           axis.text = element_text(size = 19,
@@ -209,9 +209,14 @@ for(i in seq_along(FST.matrix)){
                                     face = "bold"))
   
 }
-names(FST.maps) <- names(FST.matrix)
+
+names(FST.maps) <- gsub("user_","",names(FST.matrix))
+plot(FST.maps$`433227`)
+ggsave("figs/FST_433227.png")
+plot(FST.maps$`444332`)
+ggsave("figs/FST_444332.png")
+plot(FST.maps$`471467`)
+ggsave("figs/FST_471467.png")
 
 
-#ggpubr::ggarrange(FST.maps$`444633`,FST.maps$`433227`,
-                  #nrow = 1, ncol = 2)
 

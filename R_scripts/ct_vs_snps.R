@@ -4,9 +4,11 @@ library(here)
 
 #correlation between Ct and total iSNVs
 naive.ct <- import("naive_ct.xlsx")
-summary(glm(total_SNPs ~ ct, naive.ct, family = poisson(link = "log")))
-#coef = 0.4491 #p < 2e-16
-ggplot(data = naive.ct, aes(x=ct,y=total_SNPs))+
+vax.ct <- import("vaccinated_ct.csv")
+all.ct <- bind_rows(naive.ct, vax.ct)
+summary(glm(total_SNPs ~ ct, all.ct, family = poisson(link = "log")))
+#coef = 0.321453 #p < 2e-16
+ggplot(data = all.ct, aes(x=ct,y=total_SNPs))+
   geom_point(size = 4)+
   xlab("Ct")+
   ylab("iSNV count")+
@@ -64,7 +66,7 @@ ct.plots <- list()
 for(i in seq_along(ct.list)){
   ct.plots[[i]] <- ggplot(data = ct.list[[i]], aes(x = ct, y = shared_SNPs))+
     geom_point(size = 4)+
-    #geom_smooth(method = "glm", method.args = list(family = "poisson"))+
+    geom_smooth(method = "glm", method.args = list(family = "poisson"))+
     scale_x_continuous(limits = c(15,29),breaks = c(16,18,20,22,24,26,28))+
     scale_y_continuous(limits = c(0,12), breaks = c(0,2,4,6,8,10,12))+
     xlab("Ct")+
@@ -78,12 +80,12 @@ for(i in seq_along(ct.list)){
 #correlations for vaccinees
 vax.ct <- import("vaccinated_ct.csv")
 summary(glm(shared_SNPs ~ ct, vax.ct, family = poisson(link = "log")))
-#coef = -0.05731 #p = 0.00806
+#coef = -0.06077 #p = 0.00919
 
 ggplot(data = vax.ct, aes(x=ct,y=shared_SNPs))+
   geom_point(size = 4)+
   xlab("Ct")+
-  ylab("iSNV count")+
+  ylab("Shared iSNV count")+
   ggtitle("Vaccinee samples")+
   geom_smooth(method = "glm", method.args = list(family = "poisson"))+
   scale_x_continuous(limits = c(15,30),breaks = c(15,20,25,30))+
@@ -103,7 +105,7 @@ nasal.ct <- import("all_nasal_user_info.xlsx")%>%
   mutate("total_SNPs" = nasal.snpcounts$total_SNPs)
 
 summary(glm(shared_SNPs ~ cn, nasal.ct, family = poisson(link = "log")))
-#coef = 0.005064 #p = 0.927
+#coef = -0.01023 #p = 0.869
 
 ggplot(data = nasal.ct, aes(x=cn,y=shared_SNPs))+
   geom_point(size = 4)+

@@ -10,28 +10,28 @@ vax.snpcounts <- mutate(vax.snpcounts, "status" = "vax")
 snpcounts <- rbind(naive.snpcounts, vax.snpcounts)
 total.snps <- snpcounts$total_SNPs
 mean(total.snps)
-#32.74419
+#29.40116
 
 #naive vs vaccinated iSNV counts
-mean(naive.snpcounts$total_SNPs) #26.83582
-mean(vax.snpcounts$total_SNPs) #53.57895
+mean(naive.snpcounts$total_SNPs) #23.20149
+mean(vax.snpcounts$total_SNPs) #51.26316
 total.test <- glm(total_SNPs ~ status, data = snpcounts, 
                   family = poisson(link = "log"))  
 summary(total.test)
-#coef = 0.69142 #p < 2e-16
+#coef = 0.79276 #p < 2e-16
 
 #overall average shared iSNV count
 shared <- snpcounts$shared_SNPs
 mean(shared)
-#3.02907
+#2.348837
 
 #naive vs vaccinated shared iSNV counts
-mean(naive.snpcounts$shared_SNPs) #1.925373
-mean(vax.snpcounts$shared_SNPs) #6.921053
+mean(naive.snpcounts$shared_SNPs) #1.328358
+mean(vax.snpcounts$shared_SNPs) #5.947368
 shared.test <- glm(shared_SNPs ~ status, data = snpcounts, 
                   family = poisson(link = "log"))  
 summary(shared.test)
-#coeff = 1.27945 #p < 2e-16
+#coeff = 1.49901 #p < 2e-16
 
 #naive vs vax ct 
 naive.ct <- import("naive_ct.xlsx")
@@ -70,67 +70,14 @@ n.dat.cut <- data.frame(
 )
 
 fisher.test(n.dat)
-#naive = 5/60 = 0.0833
-#vax = 16/71 = 0.225
-#p-value = 0.03234
+#naive = 3/44 = 0.06818182
+#vax = 13/64 = 0.203125
+#p-value = 0.05915
 
 fisher.test(n.dat.cut)
-#naive = 5/60 = 0.0833
-#vax = 5/32 = 0.156
-#p-value = 0.3087
-
-#naive iSNV count over time
-naive.snpcounts <- mutate(naive.snpcounts, "ct" = naive.ct$ct)
-naive.count.num <- naive.snpcounts
-naive.count.num$day_of_infection <- as.numeric(naive.count.num$day_of_infection)
-naive.daily.test <- glm(total_SNPs ~ day_of_infection, data = naive.count.num,
-            family = poisson(link = "log"))
-summary(naive.daily.test)
-#coef = 0.156180 #p < 2e-16
-
-#plot naive iSNV count vs day
-naive.snpcounts$day_of_infection <- as.character(naive.snpcounts$day_of_infection)
-ggplot(data = naive.count.num, aes(x=day_of_infection,y=total_SNPs))+
-  geom_point(cex=4)+
-  geom_smooth(method = "glm", method.args = list(family = "poisson"))+
-  scale_x_continuous(limits = c(0,15), breaks = c(0,5,10,15))+
-  xlab("Day post-enrollment") +
-  ylab("iSNV count")+
-  ggtitle("Unvaccinated")+
-  theme_bw()+
-  theme(axis.title = element_text(size = 22),
-        axis.title.x = element_text(margin = margin(t=12)),
-        axis.title.y = element_text(margin = margin(r=15)),
-        axis.text = element_text(size = 19),
-        legend.position = "none", plot.title = element_text(size = 22))
-ggsave("figs/naive_snps_vs_day.png")
-
-#vax iSNV count over time
-vax.snpcounts <- mutate(vax.snpcounts, "ct" = vax.ct$ct)
-vax.count.num <- vax.snpcounts
-vax.count.num$day_of_infection <- as.numeric(vax.count.num$day_of_infection)
-vax.daily.test <- glm(total_SNPs ~ day_of_infection, data = vax.count.num,
-                        family = poisson(link = "log"))
-summary(vax.daily.test)
-#coef =  0.054115 #p < 2e-16
-
-#plot vax iSNV count vs day
-vax.snpcounts$day_of_infection <- as.character(vax.snpcounts$day_of_infection)
-ggplot(data = vax.count.num, aes(x=day_of_infection,y=total_SNPs))+
-  geom_point(cex=4)+
-  geom_smooth(method = "glm", method.args = list(family = "poisson"))+
-  scale_x_continuous(limits = c(0,15), breaks = c(0,5,10,15))+
-  scale_y_continuous(limits = c(0,325), breaks = c(100,200,300))+
-  xlab("Day post-enrollment") +
-  ylab("iSNV count")+
-  ggtitle("Vaccinated")+
-  theme_bw()+
-  theme(axis.title = element_text(size = 22),
-        axis.title.x = element_text(margin = margin(t=12)),
-        axis.title.y = element_text(margin = margin(r=15)),
-        axis.text = element_text(size = 19),
-        legend.position = "none", plot.title = element_text(size = 22))
-ggsave("figs/vax_snps_vs_day.png")
+#naive = 3/44 = 0.06818182
+#vax = 3/26 = 0.1153846
+#p-value = 0.6635
 
 #saliva vs. nasal shared iSNV counts
 saliva.ids <- lapply(paste0("sampleIDs_saliva/", list.files("sampleIDs_saliva")),
@@ -147,14 +94,14 @@ nasal.snps <- nasal.snpcounts %>%
   dplyr::rename("user_id" = user_ID)%>%
   select(-day_of_infection)
 
-mean(saliva.snps$shared_SNPs) #1.3125
-mean(nasal.snps$shared_SNPs) #0.4
+mean(saliva.snps$shared_SNPs) #0.9166667
+mean(nasal.snps$shared_SNPs) #0.3166667
 
 env.snps <- rbind(saliva.snps, nasal.snps)
 env.test <- glm(shared_SNPs ~ status, data = env.snps, 
                 family = poisson(link = "log"))  
 summary(env.test)
-#coef = 1.1882 #p = 7.28e-07
+#coef = 1.0629 #p = 0.000108
 
 
 

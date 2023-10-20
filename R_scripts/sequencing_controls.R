@@ -66,10 +66,11 @@ run.filter <- function(run){
   run <- run %>%
     filter(ALT_FREQ >= 0.03)%>%
     filter(TOTAL_DP >= 1000)
-  run <- run[-which(run$POS %in% c(6696,11074,15965,29051,187,1059,2094,3037,
-                                   3130,6696,6990,8022,10323,10741,11074,13408,
+  run <- run[-which(run$POS %in% c(6696,11074,15965,29051,78,187,635,1059,2094,3037,
+                                   3130,6696,6990,8022,10323,10741,11074,11567,13408,
                                    14786,19684,20148,21137,24034,24378,25563,26144,
-                                   26461,26681,28077,28826,28854,29051,29700,29760)),]
+                                   26461,26681,27964,28077,28253,28262,28281,28472,
+                                   28826,28854,29051,29700,29760)),]
   run <- run %>%
     select(POS,REF,ALT,ALT_FREQ)
   return(run)
@@ -331,7 +332,7 @@ ct.all <- as.data.frame(bind_rows(ct.table))
 ct.all$Ct <- as.double(ct.all$Ct)
 ct.all <- arrange(ct.all, Ct, desc = T)
 cor.test(ct.all$RUN1, ct.all$RUN2, method = "p") 
-#cor = 0.9966904, p-value < 2.2e-16
+#cor = 0.9994363, p-value < 2.2e-16
 export(ct.all, file = "runcontrol_ct.csv")
 
 #filter out high freq and low freq
@@ -339,18 +340,14 @@ ct.all.filter <- ct.all %>%
   filter(RUN1 > 0.03 | RUN2 > 0.03) %>%
   filter(RUN1 < 0.97 | RUN2 < 0.97)
 cor.test(ct.all.filter$RUN1, ct.all.filter$RUN2, method = "p")
-#cor = 0.8287419 #p = 0.04148
+#not enough finite observations
 
 #combine
 ct.all.filter <- ct.all.filter[,-c(1:3)]
 user.table <- user.table[,-2]
 runcontrol <- bind_rows(ct.all.filter, user.table)
 cor.test(runcontrol$RUN1, runcontrol$RUN2, method = "p")
-#cor = 0.833268 #p = 0.00275
+#cor = 0.9833689 #p = 0.0004126
 save(runcontrol, file = "runcontrol.RData")
-
-
-
-
 
 

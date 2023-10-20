@@ -40,7 +40,6 @@ for(i in 1:length(naive_snp_table$EFF)){
   }
 }
 
-
 SNPranges <- GRanges("SARS-CoV-2",
                      IRanges(naiveSNPs,width = 1,names = NULL),
                      score = naive_snp_table$COUNT,
@@ -96,34 +95,6 @@ lolliplot(SNPranges,genome,
           yaxis = F,
           xaxis.gp = gpar(fontsize = 19),
           cex=.5)
-
-#histogram of snp counts 
-naive.counts <- naive_snp_table %>%
-  select(COUNT)
-naive.counts <- as.data.frame(table(naive.counts))
-colnames(naive.counts) <- c("Count","Freq")
-ggplot(naive.counts,aes(x=Count,y=Freq))+
-  geom_col()+
-  xlab("Number of Participants Sharing an iSNV")+
-  ylab("Frequency")+
-  theme_bw()+
-  theme(axis.title = element_text(size = 22),
-        axis.title.x = element_text(margin = margin(t=10)),
-        axis.title.y = element_text(margin = margin(r=15)),
-        axis.text = element_text(size = 19))
-ggsave("figs/naive_variantcount.png")
-
-vax.counts <- vax_snp_table %>%
-  select(COUNT)
-vax.counts <- as.data.frame(table(vax.counts))
-colnames(vax.counts) <- c("Count","Freq")
-ggplot(vax.counts,aes(x=Count,y=Freq))+
-  geom_col()+
-  xlab("Variant Count Across Participants")+
-  ylab("Frequency")+
-  theme_bw()+
-  theme(axis.title = element_text(size = 22),axis.text = element_text(size = 19))
-ggsave("figs/vax_variantcount.png")
 
 #dispersion calculations
 snp.window <- function(pos,ann){
