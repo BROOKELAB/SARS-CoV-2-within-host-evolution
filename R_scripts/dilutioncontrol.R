@@ -251,12 +251,11 @@ ggsave("figs/dilution_correlation.png")
 other.filter <- function(ctall){
   ctall <- mutate(ctall,"SNP" = paste0(REF,POS,ALT))
   ctall <- ctall[-which(ctall$SNP %in% snp.list$SNP),]
-  ctall <- ctall[-which(ctall$POS %in% c(6696,11074,15965,29051,187,1059,
-                                         2094,3037,3130,6696,6990,8022,10323,
-                                         10741,11074,13408,14786,19684,20148,
-                                         21137,24034,24378,25563,26144,26461,
-                                         26681,28077,28826,28854,29051,29700,
-                                         29760)),]
+  ctall <- ctall[-which(ctall$POS %in% c(6696,11074,15965,29051,78,187,635,1059,2094,3037,
+                                         3130,6696,6990,8022,10323,10741,11074,11567,13408,
+                                         14786,19684,20148,21137,24034,24378,25563,26144,
+                                         26461,26681,27964,28077,28253,28262,28281,28472,
+                                         28826,28854,29051,29700,29760)),]
   ctall <- ctall %>%
     select(SNP, ALT_FREQ, TOTAL_DP) %>%
     distinct()
@@ -300,7 +299,7 @@ ct.other.list <- list(ct23.other,ct26.other,ct28.other)
 other.tables <- lapply(ct.other.list, other.table)
 other.table <- bind_rows(other.tables)
 cor.test(other.table$R1_FREQ, other.table$R2_FREQ, method = "p")
-#cor = 0.9971574 #p-value < 2.2e-16
+#cor = 0.996902  #p-value < 2.2e-16
 
 other.10 <- other.table %>%
   filter(R1_FREQ >= 0.10 | R2_FREQ >= 0.10)
@@ -311,6 +310,53 @@ other.3 <- other.table %>%
 other.1 <- other.table %>%
   filter(R1_FREQ >= 0.01 | R2_FREQ >= 0.01)
 
+#correlations of non-alpha iSNVs
+ggplot(data = other.1, aes(x=R1_FREQ, y = R2_FREQ))+
+  geom_point()+
+  xlab("R1 frequency")+
+  ylab("R2 freqeuncy")+
+  ggtitle("Cutoff = 0.01")+
+  theme_bw()+
+  theme(plot.title = element_text(size = 22),
+        axis.title = element_text(size = 22),
+        axis.text = element_text(size = 19),
+        axis.title.x = element_text(margin = margin(t=15)),
+        axis.title.y = element_text(margin = margin(r=15)))
+ggsave("figs/nonalpha_01.png")
+cor.test(other.1$R1_FREQ, other.1$R2_FREQ, method = "p")
+#cor = 0.996902 #pval < 2.2e-16
+
+ggplot(data = other.3, aes(x=R1_FREQ, y = R2_FREQ))+
+  geom_point()+
+  xlab("R1 frequency")+
+  ylab("R2 freqeuncy")+
+  ggtitle("Cutoff = 0.03")+
+  theme_bw()+
+  theme(plot.title = element_text(size = 22),
+        axis.title = element_text(size = 22),
+        axis.text = element_text(size = 19),
+        axis.title.x = element_text(margin = margin(t=15)),
+        axis.title.y = element_text(margin = margin(r=15)))
+ggsave("figs/nonalpha_03.png")
+cor.test(other.3$R1_FREQ, other.3$R2_FREQ, method = "p") 
+#cor = 0.9974495 #p < 2.2e-16
+
+ggplot(data = other.5, aes(x=R1_FREQ, y = R2_FREQ))+
+  geom_point()+
+  xlab("R1 frequency")+
+  ylab("R2 freqeuncy")+
+  ggtitle("Cutoff = 0.05")+
+  theme_bw()+
+  theme(plot.title = element_text(size = 22),
+        axis.title = element_text(size = 22),
+        axis.text = element_text(size = 19),
+        axis.title.x = element_text(margin = margin(t=15)),
+        axis.title.y = element_text(margin = margin(r=15)))
+ggsave("figs/nonalpha_05.png")
+cor.test(other.5$R1_FREQ, other.5$R2_FREQ, method = "p")
+#cor = 0.9967089 #p < 2.2e-16
+
+#missing iSNVS at various frequencies
 freq.cutoff <- as.data.frame(matrix(data = NA, nrow = 4, ncol = 2))
 colnames(freq.cutoff) <- c("threshold","missing")
 freq.cutoff[,1] <- c(.01,.03,.05,.1)

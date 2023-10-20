@@ -23,10 +23,11 @@ seq.filter <- function(file){
     select(POS,REF,ALT,ALT_FREQ,TOTAL_DP) %>%
     filter(ALT_FREQ >= 0.03)%>%
     distinct()
-  artifacts <- c(6696,11074,15965,29051,187,1059,2094,3037,
-                 3130,6696,6990,8022,10323,10741,11074,13408,
+  artifacts <- c(6696,11074,15965,29051,78,187,635,1059,2094,3037,
+                 3130,6696,6990,8022,10323,10741,11074,11567,13408,
                  14786,19684,20148,21137,24034,24378,25563,26144,
-                 26461,26681,28077,28826,28854,29051,29700,29760)
+                 26461,26681,27964,28077,28253,28262,28281,28472,
+                 28826,28854,29051,29700,29760)
   if(!identical(which(file$POS %in% artifacts), integer(0))){
     file <- file[-which(file$POS %in% artifacts),]
   }
@@ -57,10 +58,11 @@ seq.filter <- function(file){
     select(POS,REF,ALT,ALT_FREQ,TOTAL_DP) %>%
     filter(ALT_FREQ >= 0.03)%>%
     distinct()
-  artifacts <- c(6696,11074,15965,29051,187,1059,2094,3037,
-                 3130,6696,6990,8022,10323,10741,11074,13408,
+  artifacts <- c(6696,11074,15965,29051,78,187,635,1059,2094,3037,
+                 3130,6696,6990,8022,10323,10741,11074,11567,13408,
                  14786,19684,20148,21137,24034,24378,25563,26144,
-                 26461,26681,28077,28826,28854,29051,29700,29760)
+                 26461,26681,27964,28077,28253,28262,28281,28472,
+                 28826,28854,29051,29700,29760)
   if(!identical(which(file$POS %in% artifacts), integer(0))){
     file <- file[-which(file$POS %in% artifacts),]
   }
@@ -214,7 +216,6 @@ for(i in seq_along(nasal.vec.ct)){
 }
 
 #remove saliva files that do not exist in nasal dataset and vice-versa
-
 rm.saliva <- function(saliva, nasal){
   s.keep <- which(names(saliva) %in% names(nasal))
   saliva <- saliva[s.keep]
@@ -459,5 +460,7 @@ write.csv(unlist.comp,"nasal_saliva_freqs.csv")
 
 cor.test(as.numeric(unlist.comp$SALIVA), 
          as.numeric(unlist.comp$NASAL), method = "p")
-#cor = 0.7025951 #p-value = 1.672e-14
+#cor = 0.6152324 #p-value = 2.371e-08
+
+
 
