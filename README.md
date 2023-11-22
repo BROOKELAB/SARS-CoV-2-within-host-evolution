@@ -187,7 +187,7 @@ All files required for analysis and all script outputs are stored in `SARS_data.
 ## Extras
  * `misc/SARS-CoV-2_samples.xlsx` and `misc/SRA_data.xlsx` contain raw sequence information and metadata
  * `all_saliva_user_info.xlsx` and `all_nasal_user_info.xlsx` contain dates of sampling and sample barcodes for saliva and nasal samples, respectively
- * `all_lineages.xlsx` lists Pango lineages for each sample
+ * `metadata/all_lineages.xlsx` lists Pango lineages for each sample
  * `misc/432870_day7.trim.sorted.bam` contains per-nucleotide depth data for participant 432870, day 7 (referenced in text)
  * `color_palettes.R` contains the color palettes used to generate figures
 
