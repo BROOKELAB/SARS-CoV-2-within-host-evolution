@@ -2,8 +2,10 @@ library(tidyverse)
 library(rio)
 library(gdata)
 library(Nmisc)
+library(dunn.test)
 library(here)
 
+#function to calculate FST
 calc.FST <- function(sample1,sample2){
   sample1 <- unlist(lapply(sample1, as.numeric))
   sample2 <- unlist(lapply(sample2, as.numeric))
@@ -44,10 +46,12 @@ calc.FST <- function(sample1,sample2){
   return(FST)
 }
 
+#calculate threshold FST based on between-run variation
 load("runcontrol.RData")
 threshold <- calc.FST(runcontrol$RUN1,runcontrol$RUN2) #this will be the FST threshold of detection
 #threshold: 0.001276611
 
+#calculate within-nasal, within-saliva, between-environment FSTs for each user
 load("comparison_list.RData")
 
 calc.nasal.FST <- function(user){
@@ -126,39 +130,6 @@ for(i in seq_along(user.fst)){
   write.csv(user.fst[[i]],filenames[[i]])
 }
 
-stat.matrix <- matrix(nrow = length(comp.list), ncol = 3)
-colnames(stat.matrix) <- c("nasal_vs_saliva","nasal_vs_between","saliva_vs_between")
-rownames(stat.matrix) <- c(names(comp.list))
-
-for(i in seq_along(rownames(stat.matrix))){
-  if((length(which(!is.na(nasal.fst[[i]]))) > 1) && (length(which(!is.na(saliva.fst[[i]]))) > 1)){
-    stat.matrix[i,1] <- (t.test(nasal.fst[[i]],saliva.fst[[i]],var.equal = F))$p.value
-  }
-  if((length(which(!is.na(nasal.fst[[i]]))) > 1) && (length(which(!is.na(between.fst[[i]]))) > 1)){
-    stat.matrix[i,2] <- (t.test(nasal.fst[[i]],between.fst[[i]],var.equal = F))$p.value
-  }
-  if((length(which(!is.na(saliva.fst[[i]]))) > 1) && (length(which(!is.na(between.fst[[i]]))) > 1)){
-    stat.matrix[i,3] <- (t.test(saliva.fst[[i]],between.fst[[i]],var.equal = F))$p.value
-  }
-}
-
-stat.matrix.cut <- na.omit(stat.matrix)
-
-total.matrix <- matrix(nrow = 1, ncol = 3)
-colnames(total.matrix) <- c("nasal_vs_saliva","nasal_vs_between","saliva_vs_between")
-rownames(total.matrix) <- "total"
-total.matrix[1,1] <- (t.test(all.nasal.fst,all.saliva.fst,var.equal = F))$p.value
-total.matrix[1,2] <- (t.test(all.nasal.fst,all.between.fst,var.equal = F))$p.value
-total.matrix[1,3] <- (t.test(all.saliva.fst,all.between.fst,var.equal = F))$p.value
-
-stat.matrix <- rbind(stat.matrix,total.matrix)
-
-write.csv(stat.matrix,"FST_significance.csv")
-
-t.test(all.nasal.fst, all.saliva.fst, alternative = "l", var.equal = F) 
-#mean nasal = 0.01147952 #mean saliva = 0.14430532
-#p-value = 0.0002491
-
 #heatmaps
 heatmap.matrix <- function(user,fstuser){
   nasal <- user[,grep("NASAL",colnames(user))]
@@ -166,9 +137,9 @@ heatmap.matrix <- function(user,fstuser){
   fullgrid <- expand.grid(seq_along(nasal), seq_along(saliva))
   grid <- fullgrid[-which(fullgrid$Var1 >= fullgrid$Var2),]
   usermat <- as.data.frame(matrix(ncol = 3, 
-                                  nrow = length(which(!is.na(fstuser$nasal_FST))) + 
-                                    length(which(!is.na(fstuser$saliva_FST)))+
-                                    length(fstuser$between_FST) + 
+                                  nrow = length(grid$Var1) + 
+                                    length(grid$Var1)+
+                                    length(fullgrid$Var1) + 
                                     (2*length(nasal))))
   colnames(usermat) <- c("Env1","Env2","FST")
   
@@ -178,15 +149,18 @@ heatmap.matrix <- function(user,fstuser){
   usermat$Env2 <- c(paste0("N",grid$Var2), paste0("S",grid$Var2), 
                     paste0("S",fullgrid$Var2),paste0("N",seq_along(nasal)),
                     paste0("S",seq_along(saliva)))
-  usermat$FST <- c(fstuser$nasal_FST[which(!is.na(fstuser$nasal_FST))],
-                   fstuser$saliva_FST[which(!is.na(fstuser$saliva_FST))],
+  usermat$FST <- c(fstuser$nasal_FST[1:length(grid$Var1)],
+                   fstuser$saliva_FST[1:length(grid$Var1)],
                    fstuser$between_FST,
                    rep(0,2*length(nasal)))
   return(usermat)
 }
 
-comp.list.cut <- keep_at(comp.list, rownames(stat.matrix.cut))
-user.fst.cut <- keep_at(user.fst, rownames(stat.matrix.cut))
+comp.list.cut <- comp.list %>%
+  discard(~ dim(.x)[1] == 0)
+
+user.fst.cut <- user.fst %>%
+  discard(~ length(na.omit(unlist(.x))) == 0) #5
 
 FST.matrix <- map2(comp.list.cut, user.fst.cut, heatmap.matrix)
 
@@ -213,10 +187,9 @@ for(i in seq_along(FST.matrix)){
 names(FST.maps) <- gsub("user_","",names(FST.matrix))
 plot(FST.maps$`433227`)
 ggsave("figs/FST_433227.png")
-plot(FST.maps$`444332`)
-ggsave("figs/FST_444332.png")
 plot(FST.maps$`471467`)
 ggsave("figs/FST_471467.png")
-
+plot(FST.maps$`444633`)
+ggsave("figs/FST_444633.png")
 
 
