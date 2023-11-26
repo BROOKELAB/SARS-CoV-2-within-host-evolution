@@ -180,9 +180,9 @@ All files required for analysis and all script outputs are stored in `SARS_data.
 	   * `comparison_list.RData`
      * `runcontrol.RData`
    * Output:
-	   * **Fig 4B,C**
+	   * **Fig 4B,C,D**
 	   * `user_fst.RData` (R list object containing within- and between-environment FST values for each individual)
-	   * `FST_tables/` (.csv tables of within- and between-environment FST values for each individual, imported into prism to generate **Fig 4C**)
+	   * `FST_tables/` (.csv tables of within- and between-environment FST values for each individual, imported into prism to generate **Fig 4C,D**)
 3. Run `FST_montecarlo.R`
    * Folders and files required:
      	* `user_fst.RData`
