@@ -183,7 +183,12 @@ All files required for analysis and all script outputs are stored in `SARS_data.
 	   * **Fig 4B,C**
 	   * `user_fst.RData` (R list object containing within- and between-environment FST values for each individual)
 	   * `FST_tables/` (.csv tables of within- and between-environment FST values for each individual, imported into prism to generate **Fig 4C**)
-	   * `FST_significance.csv` (significance values for comparisons of FSTs in within- vs. between-environment pairings)
+3. Run `FST_montecarlo.R`
+   * Folders and files required:
+     	* `user_fst.RData`
+   * Output:
+  		* `FST_significance.csv` (significance values derived from Monte Carlo permutation testing)
+	 
 
 ## Extras
  * `misc/SARS-CoV-2_samples.xlsx` and `misc/SRA_data.xlsx` contain raw sequence information and metadata
